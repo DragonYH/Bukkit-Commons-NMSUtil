@@ -367,10 +367,27 @@ public class NBTUtil{
      *            实例,类型必须为NBTTagCompound,可以为null
      * @return Map,非null
      */
+    @SuppressWarnings("unchecked")
     public static Map<String,Object> getNBTTagMapFromTag(Object pNBTTagCompound){
-        if(pNBTTagCompound==null)
+        if(pNBTTagCompound==null){
             return new HashMap<>(0);
+        }
         return (Map<String,Object>)ClassUtil.getFieldValue(pNBTTagCompound,NBTUtil.field_NBTTagCompound_map);
+    }
+
+    /**
+     * 获取类型为NBTTagList的内部List值
+     * 
+     * @param pNBTTagList
+     *            实例,类型必须为NBTTagList,可以为null
+     * @return List,非null
+     */
+    @SuppressWarnings("unchecked")
+    public static List<Object> getTagListValue(Object pNBTTagList){
+        if(pNBTTagList==null){
+            return new ArrayList<>(0);
+        }
+        return (List<Object>)ClassUtil.getFieldValue(pNBTTagList,NBTUtil.field_NBTTagList_value);
     }
 
     /**
