@@ -32,10 +32,22 @@ public class NBTSerializer{
      * @throws NBTSerializeException
      */
     public static void serializeNBTToYaml(ItemStack pItem,CommentedSection pSection) throws NBTSerializeException{
-        Object tTag=NBTUtil.getItemNBT(pItem);
-        if(tTag!=null){
+        NBTSerializer.serializeNBTToYaml_Tag(NBTUtil.getItemNBT(pItem),pSection);
+    }
+
+    /**
+     * 序列化NBT数据到配置节点
+     * 
+     * @param pNBTTag
+     *            NBT
+     * @param pSection
+     *            配置节点
+     * @throws NBTSerializeException
+     */
+    public static void serializeNBTToYaml_Tag(Object pNBTTag,CommentedSection pSection) throws NBTSerializeException{
+        if(pNBTTag!=null){
             try{
-                Map<String,Object> tMapValue=NBTUtil.getNBTTagMapFromTag(tTag);
+                Map<String,Object> tMapValue=NBTUtil.getNBTTagMapFromTag(pNBTTag);
                 for(Map.Entry<String,Object> sEntry : tMapValue.entrySet()){
                     NBTSerializer.saveNBTBaseToYaml(pSection,sEntry.getKey(),sEntry.getValue());
                 }
@@ -337,10 +349,21 @@ public class NBTSerializer{
      * @throws NBTSerializeException
      */
     public static String serializeNBTToByte(ItemStack pItem) throws NBTSerializeException{
-        Object tNBTObj=NBTUtil.getItemNBT(pItem);
-        if(tNBTObj!=null){
+        return NBTSerializer.serializeNBTToByte_Tag(NBTUtil.getItemNBT(pItem));
+    }
+
+    /**
+     * 序列化物品的NBT
+     * 
+     * @param pNBTTag
+     *            要序列化的NBT
+     * @return 序列化的NBT Base64数据,如果物品不存在NBT,将返回null
+     * @throws NBTSerializeException
+     */
+    public static String serializeNBTToByte_Tag(Object pNBTTag) throws NBTSerializeException{
+        if(pNBTTag!=null){
             try{
-                byte[] tData=NBTCompressedTools.compressNBTCompound(tNBTObj);
+                byte[] tData=NBTCompressedTools.compressNBTCompound(pNBTTag);
                 if(tData!=null&&tData.length>0){
                     return new String(ByteUtil.byteToBase64(tData));
                 }
