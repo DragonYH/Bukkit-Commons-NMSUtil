@@ -10,7 +10,6 @@ import cc.bukkitPlugin.commons.nmsutil.nbt.exception.NBTDeserializeException;
 import cc.bukkitPlugin.commons.nmsutil.nbt.exception.NBTSerializeException;
 import cc.commons.commentedyaml.CommentedSection;
 import cc.commons.util.ByteUtil;
-import cc.commons.util.ClassUtil;
 import cc.commons.util.StringUtil;
 
 public class NBTSerializer{
@@ -47,7 +46,7 @@ public class NBTSerializer{
     public static void serializeNBTToYaml_Tag(Object pNBTTag,CommentedSection pSection) throws NBTSerializeException{
         if(pNBTTag!=null){
             try{
-                Map<String,Object> tMapValue=NBTUtil.getNBTTagMapFromTag(pNBTTag);
+                Map<String,Object> tMapValue=NBTUtil.getNBTTagCompoundValue(pNBTTag);
                 for(Map.Entry<String,Object> sEntry : tMapValue.entrySet()){
                     NBTSerializer.saveNBTBaseToYaml(pSection,sEntry.getKey(),sEntry.getValue());
                 }
@@ -68,24 +67,24 @@ public class NBTSerializer{
      *            NBT
      */
     private static void saveNBTBaseToYaml(CommentedSection pSection,String pKey,Object pNBTBase){
-        int tTypeId=(byte)ClassUtil.invokeMethod(NBTUtil.method_NBTBase_getTypeId,pNBTBase);
+        int tTypeId=NBTUtil.getNBTTagTypeId(pNBTBase);
         String tSaveKey=String.format("%02d|",tTypeId)+pKey.replace('.',NBTSerializer.RE_CHAR);
         if(NBTUtil.clazz_NBTTagEnd.isInstance(pNBTBase)){
             pSection.set(tSaveKey,"null");
         }else if(NBTUtil.clazz_NBTTagByte.isInstance(pNBTBase)){
-            pSection.set(tSaveKey,ClassUtil.getFieldValue(pNBTBase,NBTUtil.field_NBTTagByte_value));
+            pSection.set(tSaveKey,NBTUtil.getNBTTagByteValue(pNBTBase));
         }else if(NBTUtil.clazz_NBTTagShort.isInstance(pNBTBase)){
-            pSection.set(tSaveKey,ClassUtil.getFieldValue(pNBTBase,NBTUtil.field_NBTTagShort_value));
+            pSection.set(tSaveKey,NBTUtil.getNBTTagShortValue(pNBTBase));
         }else if(NBTUtil.clazz_NBTTagInt.isInstance(pNBTBase)){
-            pSection.set(tSaveKey,ClassUtil.getFieldValue(pNBTBase,NBTUtil.field_NBTTagInt_value));
+            pSection.set(tSaveKey,NBTUtil.getNBTTagIntValue(pNBTBase));
         }else if(NBTUtil.clazz_NBTTagLong.isInstance(pNBTBase)){
-            pSection.set(tSaveKey,ClassUtil.getFieldValue(pNBTBase,NBTUtil.field_NBTTagLong_value));
+            pSection.set(tSaveKey,NBTUtil.getNBTTagLongValue(pNBTBase));
         }else if(NBTUtil.clazz_NBTTagFloat.isInstance(pNBTBase)){
-            pSection.set(tSaveKey,ClassUtil.getFieldValue(pNBTBase,NBTUtil.field_NBTTagFloat_value));
+            pSection.set(tSaveKey,NBTUtil.getNBTTagFloatValue(pNBTBase));
         }else if(NBTUtil.clazz_NBTTagDouble.isInstance(pNBTBase)){
-            pSection.set(tSaveKey,ClassUtil.getFieldValue(pNBTBase,NBTUtil.field_NBTTagDouble_value));
+            pSection.set(tSaveKey,NBTUtil.getNBTTagDoubleValue(pNBTBase));
         }else if(NBTUtil.clazz_NBTTagByteArray.isInstance(pNBTBase)){
-            byte[] tByteArray=(byte[])ClassUtil.getFieldValue(pNBTBase,NBTUtil.field_NBTTagByteArray_value);
+            byte[] tByteArray=NBTUtil.getNBTTagByteArrayValue(pNBTBase);
             String tValueStr="";
             for(byte sByte : tByteArray){
                 tValueStr+=sByte+",";
@@ -95,23 +94,23 @@ public class NBTSerializer{
             }
             pSection.set(tSaveKey,tValueStr);
         }else if(NBTUtil.clazz_NBTTagString.isInstance(pNBTBase)){ // 8
-            pSection.set(tSaveKey,ClassUtil.getFieldValue(pNBTBase,NBTUtil.field_NBTTagString_value));
+            pSection.set(tSaveKey,NBTUtil.getNBTTagStringValue(pNBTBase));
         }else if(NBTUtil.clazz_NBTTagList.isInstance(pNBTBase)){ //9
-            List<Object> tListValue=(List<Object>)ClassUtil.getFieldValue(pNBTBase,NBTUtil.field_NBTTagList_value);
+            List<Object> tListValue=NBTUtil.getNBTTagListValue(pNBTBase);
             CommentedSection tChildSec=pSection.createSection(tSaveKey);
             int i=0;
             for(Object sChildNBTBase : tListValue){
-                NBTSerializer.saveNBTBaseToYaml(tChildSec,String.format("index%0d",i),pNBTBase);
+                NBTSerializer.saveNBTBaseToYaml(tChildSec,String.format("index%02d",i),pNBTBase);
                 i++;
             }
         }else if(NBTUtil.clazz_NBTTagCompound.isInstance(pNBTBase)){//10
-            Map<String,Object> tMapValue=NBTUtil.getNBTTagMapFromTag(pNBTBase);
+            Map<String,Object> tMapValue=NBTUtil.getNBTTagCompoundValue(pNBTBase);
             CommentedSection tChildSec=pSection.createSection(tSaveKey);
             for(Map.Entry<String,Object> sEntry : tMapValue.entrySet()){
                 NBTSerializer.saveNBTBaseToYaml(tChildSec,sEntry.getKey(),sEntry.getValue());
             }
         }else if(NBTUtil.clazz_NBTTagIntArray.isInstance(pNBTBase)){// 11
-            int[] tIntArray=(int[])ClassUtil.getFieldValue(pNBTBase,NBTUtil.field_NBTTagIntArray_value);
+            int[] tIntArray=NBTUtil.getNBTTagIntArrayValue(pNBTBase);
             String tValueStr="";
             for(int sInt : tIntArray){
                 tValueStr+=sInt+",";
@@ -135,10 +134,14 @@ public class NBTSerializer{
     public static Object deserializeNBTFromYaml(CommentedSection pSection) throws NBTDeserializeException{
         try{
             Object tTag=NBTUtil.newNBTTagCompound();
+            if(pSection==null)
+                return tTag;
+
             for(String sKey : pSection.getKeys(false)){
                 Object tChildNBT=NBTSerializer.loadNBTBaseFromSection(pSection,sKey);
                 if(tChildNBT!=null){
-                    NBTUtil.setToNBTTagCompound(tTag,sKey.split("|")[1],tChildNBT);
+                    sKey=sKey.split("[|]",2)[1].replace(NBTSerializer.RE_CHAR,'.');
+                    NBTUtil.invokeNBTTagCompound_set(tTag,sKey,tChildNBT);
                 }
             }
             return tTag;
@@ -163,34 +166,34 @@ public class NBTSerializer{
      * @throws NBTDeserializeException
      */
     private static Object loadNBTBaseFromSection(CommentedSection pSection,String pKey) throws NBTDeserializeException{
-        String[] tParts=pKey.split("|",2);
+        String[] tParts=pKey.split("[|]",2);
         if(tParts.length!=2)
             return null;
-        tParts[1]=tParts[1].replace(NBTSerializer.RE_CHAR,'.');
+
         int tTypeId=0;
         try{
             tTypeId=Integer.parseInt(tParts[0]);
         }catch(NumberFormatException exp){
             return null;
         }
-        Object tRestoreNBT=null;
+        
         if(tTypeId==0){
-            return ClassUtil.getInstance(NBTUtil.clazz_NBTTagEnd);
+            return NBTUtil.newNBTTagEnd();
         }else if(tTypeId==1){
-            return ClassUtil.getInstance(NBTUtil.clazz_NBTTagByte,byte.class,pSection.getByte(tParts[1]));
+            return NBTUtil.newNBTTagByte(pSection.getByte(pKey));
         }else if(tTypeId==2){
-            return ClassUtil.getInstance(NBTUtil.clazz_NBTTagShort,short.class,pSection.getShort(tParts[1]));
+            return NBTUtil.newNBTTagShort(pSection.getShort(pKey));
         }else if(tTypeId==3){
-            return ClassUtil.getInstance(NBTUtil.clazz_NBTTagInt,int.class,pSection.getInt(tParts[1]));
+            return NBTUtil.newNBTTagInt(pSection.getInt(pKey));
         }else if(tTypeId==4){
-            return ClassUtil.getInstance(NBTUtil.clazz_NBTTagLong,long.class,pSection.getLong(tParts[1]));
+            return NBTUtil.newNBTTagLong(pSection.getLong(pKey));
         }else if(tTypeId==5){
-            return ClassUtil.getInstance(NBTUtil.clazz_NBTTagFloat,float.class,pSection.getFloat(tParts[1]));
+            return NBTUtil.newNBTTagFloat(pSection.getFloat(pKey));
         }else if(tTypeId==6){
-            return ClassUtil.getInstance(NBTUtil.clazz_NBTTagDouble,double.class,pSection.getDouble(tParts[1]));
+            return NBTUtil.newNBTTagDouble(pSection.getDouble(pKey));
         }else if(tTypeId==7){
             List<Byte> tBList=new ArrayList<>();
-            String[] tBStrVals=pSection.getString(tParts[1],"").trim().split(",");
+            String[] tBStrVals=pSection.getString(pKey,"").trim().split(",");
             for(String sValue : tBStrVals){
                 if((sValue=sValue.trim()).isEmpty())
                     continue;
@@ -203,36 +206,26 @@ public class NBTSerializer{
             byte[] tBArray=new byte[tBList.size()];
             for(int i=0;i<tBList.size();i++)
                 tBArray[i]=tBList.get(i).byteValue();
-            return ClassUtil.getInstance(NBTUtil.clazz_NBTTagByteArray,byte[].class,tBArray);
+            return NBTUtil.newNBTTagByteArray(tBArray);
         }else if(tTypeId==8){
-            return ClassUtil.getInstance(NBTUtil.clazz_NBTTagString,String.class,pSection.getString(tParts[1],""));
+            return NBTUtil.newNBTTagString(pSection.getString(pKey,""));
         }else if(tTypeId==9){
-            tRestoreNBT=ClassUtil.getInstance(NBTUtil.clazz_NBTTagList);
-            CommentedSection tChildSec=pSection.getSection(tParts[1]);
+            Object tRestoreNBT=NBTUtil.newNBTTagList();
+            CommentedSection tChildSec=pSection.getSection(pKey);
             if(tChildSec!=null){
                 for(String sChildKey : tChildSec.getKeys(false)){
-                    Object tChildNBT=NBTSerializer.loadNBTBaseFromSection(tChildSec,pKey);
+                    Object tChildNBT=NBTSerializer.loadNBTBaseFromSection(tChildSec,sChildKey);
                     if(tChildNBT!=null){
-                        ClassUtil.invokeMethod(NBTUtil.method_NBTTagList_add,tRestoreNBT,tChildNBT);
+                        NBTUtil.invokeNBTTagList_add(tRestoreNBT,tChildNBT);
                     }
                 }
             }
             return tRestoreNBT;
         }else if(tTypeId==10){
-            tRestoreNBT=ClassUtil.getInstance(NBTUtil.clazz_NBTTagCompound);
-            CommentedSection tChildSec=pSection.getSection(tParts[1]);
-            if(tChildSec!=null){
-                for(String sChildKey : tChildSec.getKeys(false)){
-                    Object tChildNBT=NBTSerializer.loadNBTBaseFromSection(tChildSec,pKey);
-                    if(tChildNBT!=null){
-                        NBTUtil.setToNBTTagCompound(tRestoreNBT,sChildKey.split("|")[1],tChildNBT);
-                    }
-                }
-            }
-            return tRestoreNBT;
+            return NBTSerializer.deserializeNBTFromYaml(pSection.getSection(pKey));
         }else if(tTypeId==11){
             List<Integer> tIList=new ArrayList<>();
-            String[] tIStrValues=pSection.getString(tParts[1],"").trim().split(",");
+            String[] tIStrValues=pSection.getString(pKey,"").trim().split(",");
             for(String sValue : tIStrValues){
                 if((sValue=sValue.trim()).isEmpty())
                     continue;
@@ -245,9 +238,9 @@ public class NBTSerializer{
             int[] tIArray=new int[tIList.size()];
             for(int i=0;i<tIList.size();i++)
                 tIArray[i]=tIList.get(i).intValue();
-            return ClassUtil.getInstance(NBTUtil.clazz_NBTTagIntArray,int[].class,tIArray);
+            return NBTUtil.newNBTTagIntArray(tIArray);
         }
-        return tRestoreNBT;
+        return null;
     }
 
     // ----------------|| 序列化NBT到Json ||----------------
@@ -296,7 +289,7 @@ public class NBTSerializer{
             return "{}";
         }
         if(NBTUtil.clazz_NBTTagCompound.isInstance(pNBTBase)){
-            Map<String,Object> tNBTContents=(Map<String,Object>)ClassUtil.getFieldValue(pNBTBase,NBTUtil.field_NBTTagCompound_map);
+            Map<String,Object> tNBTContents=NBTUtil.getNBTTagCompoundValue(pNBTBase);
             if(tNBTContents==null||tNBTContents.isEmpty())
                 return "{}";
             String tContentJson="{";
@@ -311,7 +304,7 @@ public class NBTSerializer{
             }
             return tContentJson+"}";
         }else if(NBTUtil.clazz_NBTTagList.isInstance(pNBTBase)){
-            List<Object> tNBTContents=(List<Object>)ClassUtil.getFieldValue(pNBTBase,NBTUtil.field_NBTTagList_value);
+            List<Object> tNBTContents=NBTUtil.getNBTTagListValue(pNBTBase);
             if(tNBTContents==null||tNBTContents.isEmpty())
                 return "[]";
             String tContentJson="[";
@@ -327,7 +320,7 @@ public class NBTSerializer{
             }
             return tContentJson+"]";
         }else if(NBTUtil.clazz_NBTTagString.isInstance(pNBTBase)){
-            String tValue=(String)ClassUtil.getFieldValue(pNBTBase,NBTUtil.field_NBTTagString_value);
+            String tValue=NBTUtil.getNBTTagStringValue(pNBTBase);
             if(pTellraw){
                 tValue=tValue.replace("\"","\\\"");
                 if(StringUtil.isNotBlank(tValue)&&tValue.charAt(tValue.length()-1)=='\\'){

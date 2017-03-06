@@ -186,8 +186,8 @@ public class NMSUtil{
         StringBuilder tItemJson=new StringBuilder("{id:");
         Object tNMSItem=NMSUtil.getNMSItem(pItem);
         if(tNMSItem!=null){
-            Object tTag=NBTUtil.saveItemToNBTNMS(tNMSItem);
-            tItemJson.append(NBTUtil.getFromNBTTagCompound(tTag,"id"));
+            Object tTag=NBTUtil.saveItemToNBT_NMS(tNMSItem);
+            tItemJson.append(NBTUtil.invokeNBTTagCompound_get(tTag,"id"));
         }else{
             tItemJson.append(pItem.getTypeId()).append('s');
         }

@@ -5,10 +5,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -128,6 +126,9 @@ public class NBTUtil{
 
     /**
      * 获取Bukkit物品对应的MC物品
+     * <p>
+     * 此函数设置的目的为分离NBT模块
+     * </p>
      * 
      * @param pItem
      *            Bukkit物品实例
@@ -137,7 +138,7 @@ public class NBTUtil{
     public static Object getNMSItem(ItemStack pItem){
         if(pItem==null||pItem.getType()==Material.AIR)
             return null;
-        return ClassUtil.invokeMethod(method_CraftItemStack_asNMSCopy,null,pItem);
+        return ClassUtil.invokeMethod(NBTUtil.method_CraftItemStack_asNMSCopy,null,pItem);
     }
 
     /**
@@ -198,33 +199,6 @@ public class NBTUtil{
     }
 
     /**
-     * 获取NBTTagCompound中的元素
-     * 
-     * @param pNBTTag
-     *            NBTTagCompound实例
-     * @param pKey
-     *            键
-     * @return 值或null
-     */
-    public static Object getFromNBTTagCompound(Object pNBTTag,String pKey){
-        return ClassUtil.invokeMethod(method_NBTTagCompound_get,pNBTTag,pKey);
-    }
-
-    /**
-     * 设置NBTTagCompound的元素
-     * 
-     * @param pNBTTag
-     *            NBTTagCompound实例
-     * @param pKey
-     *            键
-     * @param pNBTBaseValue
-     *            NBTBase实例
-     */
-    public static void setToNBTTagCompound(Object pNBTTag,String pKey,Object pNBTBaseValue){
-        ClassUtil.invokeMethod(NBTUtil.method_NBTTagCompound_set,pNBTTag,new Object[]{pKey,pNBTBaseValue});
-    }
-
-    /**
      * 保存物品数据到NBT
      * 
      * @param pItem
@@ -232,7 +206,7 @@ public class NBTUtil{
      * @return NBT数据
      */
     public static Object saveItemToNBT(ItemStack pItem){
-        return NBTUtil.saveItemToNBTNMS(NBTUtil.getNMSItem(pItem));
+        return NBTUtil.saveItemToNBT_NMS(NBTUtil.getNMSItem(pItem));
     }
 
     /**
@@ -242,7 +216,7 @@ public class NBTUtil{
      *            NMS物品
      * @return NBT数据
      */
-    public static Object saveItemToNBTNMS(Object pNMSItem){
+    public static Object saveItemToNBT_NMS(Object pNMSItem){
         Object tTag=NBTUtil.newNBTTagCompound();
         if(pNMSItem==null){
             return tTag;
@@ -252,46 +226,35 @@ public class NBTUtil{
     }
 
     /**
-     * 克隆NBTTagCompound
-     * 
-     * @param pNBTTag
-     *            NBTTagCompound实例
-     * @return 克隆的NBTTagCompound
-     */
-    public static Object cloneTagCompound(Object pNBTTag){
-        return ClassUtil.invokeMethod(method_NBTTagCompound_clone,pNBTTag);
-    }
-
-    /**
      * 获取NBT的值
      * <p>
      * 值中不包含类型后缀<br>
      * 例如原NBTTagShort会表示为2s,但是此函数中只会表示为2
      * </p>
      * 
-     * @param pNBTObject
+     * @param pNBTBase
      * @return 类Json字符串
      */
-    public static String getNBTBaseValueWithoTypeSuffix(Object pNBTObject){
-        if(pNBTObject==null)
-            return null;
-
-        if(NBTUtil.clazz_NBTTagEnd.isInstance(pNBTObject)){
+    public static String getNBTBaseValueWithoTypeSuffix(Object pNBTBase){
+        if(pNBTBase==null)
             return "";
-        }else if(NBTUtil.clazz_NBTTagByte.isInstance(pNBTObject)){
-            return String.valueOf(ClassUtil.getFieldValue(pNBTObject,NBTUtil.field_NBTTagByte_value));
-        }else if(NBTUtil.clazz_NBTTagShort.isInstance(pNBTObject)){
-            return String.valueOf(ClassUtil.getFieldValue(pNBTObject,NBTUtil.field_NBTTagShort_value));
-        }else if(NBTUtil.clazz_NBTTagInt.isInstance(pNBTObject)){
-            return String.valueOf(ClassUtil.getFieldValue(pNBTObject,NBTUtil.field_NBTTagInt_value));
-        }else if(NBTUtil.clazz_NBTTagLong.isInstance(pNBTObject)){
-            return String.valueOf(ClassUtil.getFieldValue(pNBTObject,NBTUtil.field_NBTTagLong_value));
-        }else if(NBTUtil.clazz_NBTTagFloat.isInstance(pNBTObject)){
-            return String.valueOf(ClassUtil.getFieldValue(pNBTObject,NBTUtil.field_NBTTagFloat_value));
-        }else if(NBTUtil.clazz_NBTTagDouble.isInstance(pNBTObject)){
-            return String.valueOf(ClassUtil.getFieldValue(pNBTObject,NBTUtil.field_NBTTagDouble_value));
-        }else if(NBTUtil.clazz_NBTTagByteArray.isInstance(pNBTObject)){
-            byte[] bvals=(byte[])ClassUtil.getFieldValue(pNBTObject,NBTUtil.field_NBTTagByteArray_value);
+
+        if(NBTUtil.clazz_NBTTagEnd.isInstance(pNBTBase)){
+            return "";
+        }else if(NBTUtil.clazz_NBTTagByte.isInstance(pNBTBase)){
+            return String.valueOf(NBTUtil.getNBTTagByteValue(pNBTBase));
+        }else if(NBTUtil.clazz_NBTTagShort.isInstance(pNBTBase)){
+            return String.valueOf(NBTUtil.getNBTTagShortValue(pNBTBase));
+        }else if(NBTUtil.clazz_NBTTagInt.isInstance(pNBTBase)){
+            return String.valueOf(NBTUtil.getNBTTagIntValue(pNBTBase));
+        }else if(NBTUtil.clazz_NBTTagLong.isInstance(pNBTBase)){
+            return String.valueOf(NBTUtil.getNBTTagLongValue(pNBTBase));
+        }else if(NBTUtil.clazz_NBTTagFloat.isInstance(pNBTBase)){
+            return String.valueOf(NBTUtil.getNBTTagFloatValue(pNBTBase));
+        }else if(NBTUtil.clazz_NBTTagDouble.isInstance(pNBTBase)){
+            return String.valueOf(NBTUtil.getNBTTagDoubleValue(pNBTBase));
+        }else if(NBTUtil.clazz_NBTTagByteArray.isInstance(pNBTBase)){
+            byte[] bvals=NBTUtil.getNBTTagByteArrayValue(pNBTBase);
             StringBuilder tSB=new StringBuilder("[");
             for(byte sValue : bvals){
                 tSB.append(sValue).append(',');
@@ -299,10 +262,10 @@ public class NBTUtil{
             if(bvals.length>0)
                 tSB.delete(tSB.length()-1,tSB.length()-1);
             return tSB.append(']').toString();
-        }else if(NBTUtil.clazz_NBTTagString.isInstance(pNBTObject)){
-            return String.valueOf(ClassUtil.getFieldValue(pNBTObject,NBTUtil.field_NBTTagString_value));
-        }else if(NBTUtil.clazz_NBTTagIntArray.isInstance(pNBTObject)){
-            int[] ivals=(int[])ClassUtil.getFieldValue(pNBTObject,NBTUtil.field_NBTTagIntArray_value);
+        }else if(NBTUtil.clazz_NBTTagString.isInstance(pNBTBase)){
+            return NBTUtil.getNBTTagStringValue(pNBTBase);
+        }else if(NBTUtil.clazz_NBTTagIntArray.isInstance(pNBTBase)){
+            int[] ivals=NBTUtil.getNBTTagIntArrayValue(pNBTBase);
             StringBuilder tSB=new StringBuilder("[");
             for(int sValue : ivals){
                 tSB.append(sValue).append(',');
@@ -310,45 +273,27 @@ public class NBTUtil{
             if(ivals.length>0)
                 tSB.delete(tSB.length()-1,tSB.length()-1);
             return tSB.append(']').toString();
-        }else if(NBTUtil.clazz_NBTTagList.isInstance(pNBTObject)){
+        }else if(NBTUtil.clazz_NBTTagList.isInstance(pNBTBase)){
             StringBuilder tSB=new StringBuilder("[");
-            List<Object> tNBTBaseArrValue=(List<Object>)ClassUtil.getFieldValue(pNBTObject,NBTUtil.field_NBTTagList_value);
-            for(Object sNBTBase : tNBTBaseArrValue){
+            List<Object> tContent=NBTUtil.getNBTTagListValue(pNBTBase);
+            for(Object sNBTBase : tContent){
                 tSB.append(NBTUtil.getNBTBaseValueWithoTypeSuffix(sNBTBase)).append(',');
             }
-            if(tNBTBaseArrValue.size()>0)
+            if(tContent.size()>0)
                 tSB.delete(tSB.length()-1,tSB.length());
             return tSB.append(']').toString();
-        }else if(NBTUtil.clazz_NBTTagCompound.isInstance(pNBTObject)){
+        }else if(NBTUtil.clazz_NBTTagCompound.isInstance(pNBTBase)){
             StringBuilder tSB=new StringBuilder("{");
-            Map<Object,Object> tNBTBaseMapValue=(Map<Object,Object>)ClassUtil.getFieldValue(pNBTObject,NBTUtil.field_NBTTagCompound_map);
-            for(Map.Entry<Object,Object> sEntry : tNBTBaseMapValue.entrySet()){
-                tSB.append(String.valueOf(sEntry.getKey())).append(':').append(NBTUtil.getNBTBaseValueWithoTypeSuffix(sEntry.getValue())).append(',');
+            Map<String,Object> tContent=NBTUtil.getNBTTagCompoundValue(pNBTBase);
+            for(Map.Entry<String,Object> sEntry : tContent.entrySet()){
+                tSB.append(sEntry.getKey()).append(':').append(NBTUtil.getNBTBaseValueWithoTypeSuffix(sEntry.getValue())).append(',');
             }
-            if(tNBTBaseMapValue.size()>0)
+            if(tContent.size()>0)
                 tSB.delete(tSB.length()-1,tSB.length());
             return tSB.append('}').toString();
         }else{
-            return String.valueOf(pNBTObject);
+            return String.valueOf(pNBTBase);
         }
-    }
-
-    /**
-     * 获取Bukkit物品的NBT tag中第一层的标签名列表
-     *
-     * @param pItem
-     *            Bukkit物品
-     * @return 名字Set集合或null
-     */
-    public static Set<String> getNBTFirstDeepNameList(ItemStack pItem){
-        Object nbtTag=NBTUtil.getItemNBT(pItem);
-        if(nbtTag==null)
-            return null;
-        Map<String,Object> tMap=getNBTTagMapFromTag(nbtTag);
-        Set<String> rSet=new HashSet<>();
-        for(String skey : tMap.keySet())
-            rSet.add(skey);
-        return rSet;
     }
 
     /**
@@ -356,25 +301,102 @@ public class NBTUtil{
      *
      * @param pItem
      *            物品,可以为null
-     * @return 可能为null
+     * @return 可能,非null
      */
-    public static Map<String,Object> getNBTTagMapFromItem(ItemStack pItem){
-        return getNBTTagMapFromTag(NBTUtil.getItemNBT(pItem));
+    public static Map<String,Object> getNBTTagCompoundValueFromItem(ItemStack pItem){
+        return NBTUtil.getNBTTagCompoundValue(NBTUtil.getItemNBT(pItem));
     }
 
     /**
-     * 获取类类型为NBTTagCompound的值域Map
-     *
-     * @param pNBTTagCompound
-     *            实例,类型必须为NBTTagCompound,可以为null
-     * @return Map,非null
+     * 获取NBTTag的NBT类型
+     * 
+     * @param pNBTTag
+     *            NBTBase实例
+     * @return 类型
      */
     @SuppressWarnings("unchecked")
-    public static Map<String,Object> getNBTTagMapFromTag(Object pNBTTagCompound){
-        if(pNBTTagCompound==null){
-            return new HashMap<>(0);
-        }
-        return (Map<String,Object>)ClassUtil.getFieldValue(pNBTTagCompound,NBTUtil.field_NBTTagCompound_map);
+    public static byte getNBTTagTypeId(Object pNBTTag){
+        return (byte)ClassUtil.invokeMethod(NBTUtil.method_NBTBase_getTypeId,pNBTTag);
+    }
+
+    public static Object newNBTTagEnd(){
+        return ClassUtil.getInstance(NBTUtil.clazz_NBTTagEnd);
+    }
+
+    public static Object newNBTTagByte(byte pValue){
+        return ClassUtil.getInstance(NBTUtil.clazz_NBTTagByte,byte.class,pValue);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static byte getNBTTagByteValue(Object pNBTTagByte){
+        return (byte)ClassUtil.getFieldValue(pNBTTagByte,NBTUtil.field_NBTTagByte_value);
+    }
+
+    public static Object newNBTTagShort(short pValue){
+        return ClassUtil.getInstance(NBTUtil.clazz_NBTTagShort,short.class,pValue);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static short getNBTTagShortValue(Object pNBTTagShort){
+        return (short)ClassUtil.getFieldValue(pNBTTagShort,NBTUtil.field_NBTTagShort_value);
+    }
+
+    public static Object newNBTTagInt(int pValue){
+        return ClassUtil.getInstance(NBTUtil.clazz_NBTTagInt,int.class,pValue);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static int getNBTTagIntValue(Object pNBTTagInt){
+        return (int)ClassUtil.getFieldValue(pNBTTagInt,NBTUtil.field_NBTTagInt_value);
+    }
+
+    public static Object newNBTTagLong(long pValue){
+        return ClassUtil.getInstance(NBTUtil.clazz_NBTTagLong,long.class,pValue);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static long getNBTTagLongValue(Object pNBTTagLong){
+        return (long)ClassUtil.getFieldValue(pNBTTagLong,NBTUtil.field_NBTTagLong_value);
+    }
+
+    public static Object newNBTTagFloat(float pValue){
+        return ClassUtil.getInstance(NBTUtil.clazz_NBTTagFloat,float.class,pValue);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static float getNBTTagFloatValue(Object pNBTTagFloat){
+        return (float)ClassUtil.getFieldValue(pNBTTagFloat,NBTUtil.field_NBTTagFloat_value);
+    }
+
+    public static Object newNBTTagDouble(double pValue){
+        return ClassUtil.getInstance(NBTUtil.clazz_NBTTagDouble,double.class,pValue);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static double getNBTTagDoubleValue(Object pNBTTagDouble){
+        return (double)ClassUtil.getFieldValue(pNBTTagDouble,NBTUtil.field_NBTTagDouble_value);
+    }
+
+    public static Object newNBTTagByteArray(byte[] pValue){
+        return ClassUtil.getInstance(NBTUtil.clazz_NBTTagByteArray,byte[].class,pValue);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static byte[] getNBTTagByteArrayValue(Object pNBTTagByteArray){
+        return (byte[])ClassUtil.getFieldValue(pNBTTagByteArray,NBTUtil.field_NBTTagByteArray_value);
+    }
+
+    public static Object newNBTTagString(String pValue){
+        return ClassUtil.getInstance(NBTUtil.clazz_NBTTagString,String.class,pValue);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static String getNBTTagStringValue(Object pNBTTagString){
+        return (String)ClassUtil.getFieldValue(pNBTTagString,NBTUtil.field_NBTTagString_value);
+    }
+
+    public static Object newNBTTagList(){
+        return ClassUtil.getInstance(NBTUtil.clazz_NBTTagList);
     }
 
     /**
@@ -385,7 +407,7 @@ public class NBTUtil{
      * @return List,非null
      */
     @SuppressWarnings("unchecked")
-    public static List<Object> getTagListValue(Object pNBTTagList){
+    public static List<Object> getNBTTagListValue(Object pNBTTagList){
         if(pNBTTagList==null){
             return new ArrayList<>(0);
         }
@@ -393,19 +415,15 @@ public class NBTUtil{
     }
 
     /**
-     * 从NBTTagCompound实例中移除指定的标签
-     *
-     * @param pNBTTagCompound
-     *            NBTTagCompound实例
-     * @param pNBTLabel
-     *            NBT标签
-     * @return 移除的值或null
+     * 添加一个NBT值到NBTTagList实例中
+     * 
+     * @param pNBTTagList
+     *            添加到的TagList
+     * @param pNBTBase
+     *            要添加的内容,必须是NBTBase的实例
      */
-    public static Object removeFromNBTTagCompound(Object pNBTTagCompound,String pNBTLabel){
-        Map<String,Object> tMap=NBTUtil.getNBTTagMapFromTag(pNBTTagCompound);
-        if(tMap==null)
-            return null;
-        return tMap.remove(pNBTLabel);
+    public static void invokeNBTTagList_add(Object pNBTTagList,Object pNBTBase){
+        ClassUtil.invokeMethod(NBTUtil.method_NBTTagList_add,pNBTTagList,pNBTBase);
     }
 
     /**
@@ -418,15 +436,78 @@ public class NBTUtil{
     }
 
     /**
-     * 添加一个NBT值到NBTTagList实例中
-     * 
-     * @param pNBTTagList
-     *            添加到的TagList
-     * @param pNBTBase
-     *            要添加的内容
+     * 获取类类型为NBTTagCompound的值域Map
+     *
+     * @param pNBTTagCompound
+     *            实例,类型必须为NBTTagCompound,可以为null
+     * @return Map,非null
      */
-    public static void addToNBTTagList(Object pNBTTagList,Object pNBTBase){
-        ClassUtil.invokeMethod(NBTUtil.method_NBTTagList_add,pNBTTagList,pNBTBase);
+    @SuppressWarnings("unchecked")
+    public static Map<String,Object> getNBTTagCompoundValue(Object pNBTTagCompound){
+        if(pNBTTagCompound==null){
+            return new HashMap<>(0);
+        }
+        return (Map<String,Object>)ClassUtil.getFieldValue(pNBTTagCompound,NBTUtil.field_NBTTagCompound_map);
     }
 
+    /**
+     * 获取NBTTagCompound中的元素
+     * 
+     * @param pNBTTagCompound
+     *            NBTTagCompound实例,允许为null
+     * @param pKey
+     *            键
+     * @return 值或null
+     */
+    public static Object invokeNBTTagCompound_get(Object pNBTTagCompound,String pKey){
+        return pNBTTagCompound==null?null:ClassUtil.invokeMethod(NBTUtil.method_NBTTagCompound_get,pNBTTagCompound,pKey);
+    }
+
+    /**
+     * 设置NBTTagCompound的元素
+     * 
+     * @param pNBTTagCompound
+     *            NBTTagCompound实例,不能null
+     * @param pKey
+     *            键
+     * @param pNBTBase
+     *            NBTBase实例
+     */
+    public static void invokeNBTTagCompound_set(Object pNBTTagCompound,String pKey,Object pNBTBase){
+        ClassUtil.invokeMethod(NBTUtil.method_NBTTagCompound_set,pNBTTagCompound,new Object[]{pKey,pNBTBase});
+    }
+
+    /**
+     * 从NBTTagCompound实例中移除指定的标签
+     *
+     * @param pNBTTagCompound
+     *            NBTTagCompound实例,允许为null
+     * @param pKey
+     *            NBT标签
+     * @return 移除的值或null
+     */
+    public static Object invokeNBTTagCompound_remove(Object pNBTTagCompound,String pKey){
+        Map<String,Object> tValue=NBTUtil.getNBTTagCompoundValue(pNBTTagCompound);
+        return tValue==null?null:tValue.remove(pKey);
+    }
+
+    /**
+     * 克隆NBTTagCompound
+     * 
+     * @param pNBTTagCompound
+     *            NBTTagCompound实例,允许为null
+     * @return 克隆的NBTTagCompound,或新的空NBTTagCompound
+     */
+    public static Object invokeNBTTagCompound_clone(Object pNBTTagCompound){
+        return pNBTTagCompound!=null?NBTUtil.newNBTTagCompound():ClassUtil.invokeMethod(NBTUtil.method_NBTTagCompound_clone,pNBTTagCompound);
+    }
+
+    public static Object newNBTTagIntArray(int[] pValue){
+        return ClassUtil.getInstance(NBTUtil.clazz_NBTTagIntArray,int[].class,pValue);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static int[] getNBTTagIntArrayValue(Object pNBTTagIntArray){
+        return (int[])ClassUtil.getFieldValue(pNBTTagIntArray,NBTUtil.field_NBTTagIntArray_value);
+    }
 }
