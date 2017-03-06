@@ -177,8 +177,10 @@ public class NBTUtil{
      * @param pNBTTag
      *            NBT
      */
-    public static void setItemNBT(ItemStack pItem,Object pNBTTag){
-        NBTUtil.setItemNBT_NMS(NBTUtil.getNMSItem(pItem),pNBTTag);
+    public static ItemStack setItemNBT(ItemStack pItem,Object pNBTTag){
+        Object tNMSItem=NBTUtil.getNMSItem(pItem);
+        NBTUtil.setItemNBT_NMS(tNMSItem,pNBTTag);
+        return NMSUtil.getCBTItem(tNMSItem);
     }
 
     /**
@@ -413,6 +415,18 @@ public class NBTUtil{
      */
     public static Object newNBTTagCompound(){
         return ClassUtil.getInstance(NBTUtil.clazz_NBTTagCompound);
+    }
+
+    /**
+     * 添加一个NBT值到NBTTagList实例中
+     * 
+     * @param pNBTTagList
+     *            添加到的TagList
+     * @param pNBTBase
+     *            要添加的内容
+     */
+    public static void addToNBTTagList(Object pNBTTagList,Object pNBTBase){
+        ClassUtil.invokeMethod(NBTUtil.method_NBTTagList_add,pNBTTagList,pNBTBase);
     }
 
 }
