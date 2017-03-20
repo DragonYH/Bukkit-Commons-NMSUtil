@@ -39,8 +39,8 @@ public class NBTUtil{
 
     public static final Method method_CraftItemStack_asNMSCopy;
     public static final Method method_NBTBase_getTypeId;
+    public static final Method method_NBTBase_copy;
     public static final Method method_NBTTagCompound_isEmpty;
-    public static final Method method_NBTTagCompound_clone;
     public static final Method method_NBTTagCompound_hasKeyOfType;
     public static final Method method_NBTTagCompound_get;
     public static final Method method_NBTTagCompound_getInt;
@@ -88,8 +88,8 @@ public class NBTUtil{
         clazz_NBTTagList=ClassUtil.getClass(tPacketPath+"NBTTagList");
 
         method_NBTBase_getTypeId=ClassUtil.getUnknowMethod(clazz_NBTBase,byte.class).get(0);
+        method_NBTBase_copy=ClassUtil.getUnknowMethod(clazz_NBTBase,clazz_NBTBase).get(0);
         method_NBTTagCompound_isEmpty=ClassUtil.getUnknowMethod(clazz_NBTTagCompound,boolean.class).get(0);
-        method_NBTTagCompound_clone=ClassUtil.getUnknowMethod(clazz_NBTTagCompound,clazz_NBTBase).get(0);
         method_NBTTagCompound_hasKeyOfType=ClassUtil.getUnknowMethod(clazz_NBTTagCompound,boolean.class,new Class<?>[]{String.class,int.class}).get(0);
         method_NBTTagCompound_get=ClassUtil.getUnknowMethod(clazz_NBTTagCompound,clazz_NBTBase,String.class).get(0);
         method_NBTTagCompound_getInt=ClassUtil.getUnknowMethod(clazz_NBTTagCompound,int.class,String.class).get(0);
@@ -319,6 +319,10 @@ public class NBTUtil{
         return (byte)ClassUtil.invokeMethod(NBTUtil.method_NBTBase_getTypeId,pNBTTag);
     }
 
+    public static Object invokeNBTTagCopy(Object pNBTTag){
+        return ClassUtil.invokeMethod(NBTUtil.method_NBTBase_copy,pNBTTag);
+    }
+
     public static Object newNBTTagEnd(){
         return ClassUtil.getInstance(NBTUtil.clazz_NBTTagEnd);
     }
@@ -463,6 +467,31 @@ public class NBTUtil{
         return pNBTTagCompound==null?null:ClassUtil.invokeMethod(NBTUtil.method_NBTTagCompound_get,pNBTTagCompound,pKey);
     }
 
+    @SuppressWarnings("unchecked")
+    public static String invokeNBTTagCompound_getString(Object pNBTTagCompound,String pKey){
+        return pNBTTagCompound==null?null:(String)ClassUtil.invokeMethod(NBTUtil.method_NBTTagCompound_getString,pNBTTagCompound,pKey);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static int invokeNBTTagCompound_getInt(Object pNBTTagCompound,String pKey){
+        return pNBTTagCompound==null?0:(int)ClassUtil.invokeMethod(NBTUtil.method_NBTTagCompound_getInt,pNBTTagCompound,pKey);
+    }
+
+    /**
+     * 获取NBTTagCompound中的NBTTagList元素
+     * 
+     * @param pNBTTagCompound
+     *            NBTTagCompound实例,允许为null
+     * @param pKey
+     *            键
+     * @param pNBTType
+     *            NBTTagList 所包含的NBT类型
+     * @return NBTTagList实例或null
+     */
+    public static Object invokeNBTTagCompound_getList(Object pNBTTagCompound,String pKey,int pNBTType){
+        return pNBTTagCompound==null?null:ClassUtil.invokeMethod(NBTUtil.method_NBTTagCompound_getList,pNBTTagCompound,new Object[]{pKey,pNBTType});
+    }
+
     /**
      * 设置NBTTagCompound的元素
      * 
@@ -499,7 +528,7 @@ public class NBTUtil{
      * @return 克隆的NBTTagCompound,或新的空NBTTagCompound
      */
     public static Object invokeNBTTagCompound_clone(Object pNBTTagCompound){
-        return pNBTTagCompound!=null?NBTUtil.newNBTTagCompound():ClassUtil.invokeMethod(NBTUtil.method_NBTTagCompound_clone,pNBTTagCompound);
+        return pNBTTagCompound!=null?NBTUtil.newNBTTagCompound():ClassUtil.invokeMethod(NBTUtil.clazz_NBTBase,pNBTTagCompound);
     }
 
     public static Object newNBTTagIntArray(int[] pValue){
