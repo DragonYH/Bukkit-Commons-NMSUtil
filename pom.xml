@@ -44,6 +44,7 @@
             <groupId>cc.commons</groupId>
             <artifactId>commons-util</artifactId>
             <version>1.0.0-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.spigotmc</groupId>
@@ -79,6 +80,7 @@
                     <artifactId>json-simple</artifactId>
                 </exclusion>
             </exclusions>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>cc.commons</groupId>
@@ -90,6 +92,7 @@
                     <artifactId>snakeyaml</artifactId>
                 </exclusion>
             </exclusions>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
