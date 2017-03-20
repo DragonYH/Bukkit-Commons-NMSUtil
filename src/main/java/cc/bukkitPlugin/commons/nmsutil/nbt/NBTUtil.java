@@ -17,6 +17,20 @@ import cc.commons.util.ClassUtil;
 
 public class NBTUtil{
 
+    // NBTTag Type id
+    public static final int NBT_End=0;
+    public static final int NBT_Byte=1;
+    public static final int NBT_Short=2;
+    public static final int NBT_Int=3;
+    public static final int NBT_Long=4;
+    public static final int NBT_Float=5;
+    public static final int NBT_Double=6;
+    public static final int NBT_ByteArray=7;
+    public static final int NBT_String=8;
+    public static final int NBT_List=9;
+    public static final int NBT_Compound=10;
+    public static final int NBT_IntArray=11;
+    
     public static final Class<?> clazz_NMSItemStack;
     public static final Class<?> clazz_NBTBase;
     public static final Class<?> clazz_NBTTagByte;

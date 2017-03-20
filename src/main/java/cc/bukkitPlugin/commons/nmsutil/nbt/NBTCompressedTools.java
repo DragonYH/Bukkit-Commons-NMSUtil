@@ -57,42 +57,42 @@ public class NBTCompressedTools{
         byte typeId=NBTUtil.getNBTTagTypeId(pNBTBase);
         pStream.writeByte(typeId);
         switch(typeId){
-            case 0: //NBTTagEnd
+            case NBTUtil.NBT_End: //NBTTagEnd
                 return;
-            case 1: // NBTTagByte 
+            case NBTUtil.NBT_Byte: // NBTTagByte 
                 pStream.writeByte(NBTUtil.getNBTTagByteValue(pNBTBase));
                 return;
-            case 2: // NBTTagShort
+            case NBTUtil.NBT_Short: // NBTTagShort
                 pStream.writeShort(NBTUtil.getNBTTagShortValue(pNBTBase));
                 return;
-            case 3: // NBTTagInt
+            case NBTUtil.NBT_Int: // NBTTagInt
                 pStream.writeInt(NBTUtil.getNBTTagIntValue(pNBTBase));
                 return;
-            case 4: // NBTTagLong
+            case NBTUtil.NBT_Long: // NBTTagLong
                 pStream.writeLong(NBTUtil.getNBTTagLongValue(pNBTBase));
                 return;
-            case 5: // NBTTagFloat
+            case NBTUtil.NBT_Float: // NBTTagFloat
                 pStream.writeFloat(NBTUtil.getNBTTagFloatValue(pNBTBase));
                 return;
-            case 6: // NBTTagDouble
+            case NBTUtil.NBT_Double: // NBTTagDouble
                 pStream.writeDouble(NBTUtil.getNBTTagDoubleValue(pNBTBase));
                 return;
-            case 7: // NBTTagByteArray
+            case NBTUtil.NBT_ByteArray: // NBTTagByteArray
                 byte[] tByteArrValue=NBTUtil.getNBTTagByteArrayValue(pNBTBase);
                 pStream.writeInt(tByteArrValue.length);
                 pStream.write(tByteArrValue);
                 return;
-            case 8: // NBTTagString
+            case NBTUtil.NBT_String: // NBTTagString
                 pStream.writeUTF(NBTUtil.getNBTTagStringValue(pNBTBase));
                 return;
-            case 9: // NBTTagList
+            case NBTUtil.NBT_List: // NBTTagList
                 List<Object> tNBTBaseArrValue=NBTUtil.getNBTTagListValue(pNBTBase);
                 pStream.writeInt(tNBTBaseArrValue.size());
                 for(Object sNBTBase : tNBTBaseArrValue){
                     NBTCompressedTools.compressNBTBase(sNBTBase,pStream);
                 }
                 return;
-            case 10: // NBTTagCompound
+            case NBTUtil.NBT_Compound: // NBTTagCompound
                 Map<String,Object> tNBTBaseMapValue=NBTUtil.getNBTTagCompoundValue(pNBTBase);
                 pStream.writeInt(tNBTBaseMapValue.size());
                 for(Map.Entry<String,Object> sEntry : tNBTBaseMapValue.entrySet()){
@@ -100,7 +100,7 @@ public class NBTCompressedTools{
                     NBTCompressedTools.compressNBTBase(sEntry.getValue(),pStream);
                 }
                 return;
-            case 11: // NBTTagIntArray
+            case NBTUtil.NBT_IntArray: // NBTTagIntArray
                 int[] tIntArrValue=NBTUtil.getNBTTagIntArrayValue(pNBTBase);
                 pStream.writeInt(tIntArrValue.length);
                 for(int i=0;i<tIntArrValue.length;i++){
@@ -133,40 +133,40 @@ public class NBTCompressedTools{
         byte typeId=pStream.readByte();
         int length;
         switch(typeId){
-            case 1: // NBTTagByte
+            case NBTUtil.NBT_Byte: // NBTTagByte
                 return NBTUtil.newNBTTagByte(pStream.readByte());
-            case 2: // NBTTagShort
+            case NBTUtil.NBT_Short: // NBTTagShort
                 return NBTUtil.newNBTTagShort(pStream.readShort());
-            case 3: // NBTTagInt
+            case NBTUtil.NBT_Int: // NBTTagInt
                 return NBTUtil.newNBTTagInt(pStream.readInt());
-            case 4: // NBTTagLong
+            case NBTUtil.NBT_Long: // NBTTagLong
                 return NBTUtil.newNBTTagLong(pStream.readLong());
-            case 5: // NBTTagFloat
+            case NBTUtil.NBT_Float: // NBTTagFloat
                 return NBTUtil.newNBTTagFloat(pStream.readFloat());
-            case 6: // NBTTagDouble
+            case NBTUtil.NBT_Double: // NBTTagDouble
                 return NBTUtil.newNBTTagDouble(pStream.readDouble());
-            case 7: // NBTTagByteArray
+            case NBTUtil.NBT_ByteArray: // NBTTagByteArray
                 length=pStream.readInt();
                 byte[] tByteArrValue=new byte[length];
                 pStream.read(tByteArrValue);
                 return NBTUtil.newNBTTagByteArray(tByteArrValue);
-            case 8: // NBTTagString
+            case NBTUtil.NBT_String: // NBTTagString
                 return NBTUtil.newNBTTagString(pStream.readUTF());
-            case 9: // NBTTagList
+            case NBTUtil.NBT_List: // NBTTagList
                 Object tNBTTagList=NBTUtil.newNBTTagList();
                 length=pStream.readInt();
                 for(int i=0;i<length;i++){
                     ClassUtil.invokeMethod(NBTUtil.method_NBTTagList_add,tNBTTagList,NBTCompressedTools.readCompressed(pStream));
                 }
                 return tNBTTagList;
-            case 10: // NBTTagCompound
+            case NBTUtil.NBT_Compound: // NBTTagCompound
                 Object tNBTTagCompound=NBTUtil.newNBTTagCompound();
                 length=pStream.readInt();
                 for(int i=0;i<length;i++){
                     ClassUtil.invokeMethod(NBTUtil.method_NBTTagCompound_set,tNBTTagCompound,new Object[]{pStream.readUTF(),NBTCompressedTools.readCompressed(pStream)});
                 }
                 return tNBTTagCompound;
-            case 11: // NBTTagIntArray
+            case NBTUtil.NBT_IntArray: // NBTTagIntArray
                 length=pStream.readInt();
                 int[] tIntArrValue=new int[length];
                 for(int i=0;i<tIntArrValue.length;i++){

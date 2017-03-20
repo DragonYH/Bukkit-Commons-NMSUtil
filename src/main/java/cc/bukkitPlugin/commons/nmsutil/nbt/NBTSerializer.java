@@ -177,21 +177,21 @@ public class NBTSerializer{
             return null;
         }
         
-        if(tTypeId==0){
+        if(tTypeId==NBTUtil.NBT_End){
             return NBTUtil.newNBTTagEnd();
-        }else if(tTypeId==1){
+        }else if(tTypeId==NBTUtil.NBT_Byte){
             return NBTUtil.newNBTTagByte(pSection.getByte(pKey));
-        }else if(tTypeId==2){
+        }else if(tTypeId==NBTUtil.NBT_Short){
             return NBTUtil.newNBTTagShort(pSection.getShort(pKey));
-        }else if(tTypeId==3){
+        }else if(tTypeId==NBTUtil.NBT_Int){
             return NBTUtil.newNBTTagInt(pSection.getInt(pKey));
-        }else if(tTypeId==4){
+        }else if(tTypeId==NBTUtil.NBT_Long){
             return NBTUtil.newNBTTagLong(pSection.getLong(pKey));
-        }else if(tTypeId==5){
+        }else if(tTypeId==NBTUtil.NBT_Float){
             return NBTUtil.newNBTTagFloat(pSection.getFloat(pKey));
-        }else if(tTypeId==6){
+        }else if(tTypeId==NBTUtil.NBT_Double){
             return NBTUtil.newNBTTagDouble(pSection.getDouble(pKey));
-        }else if(tTypeId==7){
+        }else if(tTypeId==NBTUtil.NBT_ByteArray){
             List<Byte> tBList=new ArrayList<>();
             String[] tBStrVals=pSection.getString(pKey,"").trim().split(",");
             for(String sValue : tBStrVals){
@@ -207,9 +207,9 @@ public class NBTSerializer{
             for(int i=0;i<tBList.size();i++)
                 tBArray[i]=tBList.get(i).byteValue();
             return NBTUtil.newNBTTagByteArray(tBArray);
-        }else if(tTypeId==8){
+        }else if(tTypeId==NBTUtil.NBT_String){
             return NBTUtil.newNBTTagString(pSection.getString(pKey,""));
-        }else if(tTypeId==9){
+        }else if(tTypeId==NBTUtil.NBT_List){
             Object tRestoreNBT=NBTUtil.newNBTTagList();
             CommentedSection tChildSec=pSection.getSection(pKey);
             if(tChildSec!=null){
@@ -221,9 +221,9 @@ public class NBTSerializer{
                 }
             }
             return tRestoreNBT;
-        }else if(tTypeId==10){
+        }else if(tTypeId==NBTUtil.NBT_Compound){
             return NBTSerializer.deserializeNBTFromYaml(pSection.getSection(pKey));
-        }else if(tTypeId==11){
+        }else if(tTypeId==NBTUtil.NBT_IntArray){
             List<Integer> tIList=new ArrayList<>();
             String[] tIStrValues=pSection.getString(pKey,"").trim().split(",");
             for(String sValue : tIStrValues){
