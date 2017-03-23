@@ -17,7 +17,7 @@ public class NBTSerializer{
     /**
      * 将NBT节点名中的替换点字符串替换成的字符
      */
-    private static char RE_CHAR='$';
+    public static final char RE_CHAR='$';
 
     // ----------------|| 序列化NBT到Yaml配置 ||----------------
 
