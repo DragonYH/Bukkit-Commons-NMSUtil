@@ -25,6 +25,7 @@ public class NBTUtil{
     public static final int NBT_Long=4;
     public static final int NBT_Float=5;
     public static final int NBT_Double=6;
+    public static final int NBT_Number=99;
     public static final int NBT_ByteArray=7;
     public static final int NBT_String=8;
     public static final int NBT_List=9;
