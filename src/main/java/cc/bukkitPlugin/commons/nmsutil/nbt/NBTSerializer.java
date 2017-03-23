@@ -34,7 +34,7 @@ public class NBTSerializer{
          * @return Yaml Key
          */
         public static String creatYamlKey(byte pNBTType,String pNBTKey){
-            return String.format("%02d|%s",pNBTType,pNBTKey.replace('.',NBTSerializer.RE_CHAR));
+            return String.format("%02d|%s",pNBTType,pNBTKey.replace("$","\\$").replace('.','$'));
         }
 
         /**
@@ -68,7 +68,7 @@ public class NBTSerializer{
             }catch(NumberFormatException|IndexOutOfBoundsException ignore){
             }
             if(tInfos.length>1){
-                tKey.mNBTKey=tInfos[1].replace(NBTSerializer.RE_CHAR,'.');
+                tKey.mNBTKey=tInfos[1].replaceAll("(?<!\\\\)\\$",".").replace("\\$","$");
             }
             return tKey;
         }
@@ -80,11 +80,6 @@ public class NBTSerializer{
         /** 存储在Yaml中的Key */
         public String mStoreKey="";
     }
-
-    /**
-     * 将NBT节点名中的替换点字符串替换成的字符
-     */
-    public static final char RE_CHAR='$';
 
     // ----------------|| 序列化NBT到Yaml配置 ||----------------
 
