@@ -27,16 +27,16 @@ public class NBTCompressedTools{
         if(!NBTUtil.clazz_NBTTagCompound.isInstance(pNBTTagCompound))
             throw new IOException("参数类型必须为NBTTagCompound");
 
-        ByteArrayOutputStream bytearrayoutputstream=new ByteArrayOutputStream();
-        DataOutputStream dataoutputstream=new DataOutputStream(new GZIPOutputStream(bytearrayoutputstream));
+        ByteArrayOutputStream tBAOStream=new ByteArrayOutputStream();
+        DataOutputStream tDOStream=new DataOutputStream(new GZIPOutputStream(tBAOStream));
 
         try{
-            NBTCompressedTools.compressNBTBase(pNBTTagCompound,dataoutputstream);
+            NBTCompressedTools.compressNBTBase(pNBTTagCompound,tDOStream);
         }finally{
-            dataoutputstream.close();
+            tDOStream.close();
         }
 
-        return bytearrayoutputstream.toByteArray();
+        return tBAOStream.toByteArray();
     }
 
     /**
