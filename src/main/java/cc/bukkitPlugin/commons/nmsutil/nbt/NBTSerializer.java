@@ -1,18 +1,85 @@
 package cc.bukkitPlugin.commons.nmsutil.nbt;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.bukkit.inventory.ItemStack;
 
 import cc.bukkitPlugin.commons.nmsutil.nbt.exception.NBTDeserializeException;
 import cc.bukkitPlugin.commons.nmsutil.nbt.exception.NBTSerializeException;
+import cc.bukkitPlugin.commons.nmsutil.nbt.wapper.NBTWCompound;
 import cc.commons.commentedyaml.CommentedSection;
 import cc.commons.util.ByteUtil;
+import cc.commons.util.IOUtil;
 import cc.commons.util.StringUtil;
 
 public class NBTSerializer{
+
+    public static class YamlKey{
+
+        /**
+         * 创建用于存储NBTTagCompound中的NBT在Yaml中的key
+         * 
+         * @param pNBTType
+         *            NBT类型
+         * @param pNBTKey
+         *            NBT名字
+         * @return Yaml Key
+         */
+        public static String creatYamlKey(byte pNBTType,String pNBTKey){
+            return String.format("%02d|%s",pNBTType,pNBTKey.replace('.',NBTSerializer.RE_CHAR));
+        }
+
+        /**
+         * 创建用于存储NBTTagList中的NBT在Yaml中的key
+         * 
+         * @param pNBTType
+         *            NBT类型
+         * @param pNBTKey
+         *            NBT名字
+         * @param pIndex
+         *            当前NBT所在位置
+         * @return Yaml Key
+         */
+        public static String creatYamlKey(byte pNBTType,int pIndex){
+            return YamlKey.creatYamlKey(pNBTType,"index"+pIndex);
+        }
+
+        /**
+         * 从Yaml Key中解析信息
+         * 
+         * @param pYamlKey
+         *            Key
+         * @return NBT信息
+         */
+        public static YamlKey decodeYamlKey(String pYamlKey){
+            YamlKey tKey=new YamlKey();
+            tKey.mStoreKey=pYamlKey;
+            String[] tInfos=pYamlKey.split("[|]",2);
+            try{
+                tKey.mNBTType=Byte.parseByte(tInfos[0]);
+            }catch(NumberFormatException|IndexOutOfBoundsException ignore){
+            }
+            if(tInfos.length>1){
+                tKey.mNBTKey=tInfos[1].replace(NBTSerializer.RE_CHAR,'.');
+            }
+            return tKey;
+        }
+
+        /** NBT的类型值 */
+        public byte mNBTType=-1;
+        /** NBTCompound中的Key */
+        public String mNBTKey="";
+        /** 存储在Yaml中的Key */
+        public String mStoreKey="";
+    }
 
     /**
      * 将NBT节点名中的替换点字符串替换成的字符
@@ -28,9 +95,8 @@ public class NBTSerializer{
      *            物品
      * @param pSection
      *            配置节点
-     * @throws NBTSerializeException
      */
-    public static void serializeNBTToYaml(ItemStack pItem,CommentedSection pSection) throws NBTSerializeException{
+    public static void serializeNBTToYaml(ItemStack pItem,CommentedSection pSection){
         NBTSerializer.serializeNBTToYaml_Tag(NBTUtil.getItemNBT(pItem),pSection);
     }
 
@@ -41,17 +107,13 @@ public class NBTSerializer{
      *            NBT
      * @param pSection
      *            配置节点
-     * @throws NBTSerializeException
      */
-    public static void serializeNBTToYaml_Tag(Object pNBTTag,CommentedSection pSection) throws NBTSerializeException{
+    public static void serializeNBTToYaml_Tag(Object pNBTTag,CommentedSection pSection){
+        pSection.clear();
         if(pNBTTag!=null){
-            try{
-                Map<String,Object> tMapValue=NBTUtil.getNBTTagCompoundValue(pNBTTag);
-                for(Map.Entry<String,Object> sEntry : tMapValue.entrySet()){
-                    NBTSerializer.saveNBTBaseToYaml(pSection,sEntry.getKey(),sEntry.getValue());
-                }
-            }catch(Throwable exp){
-                throw new NBTSerializeException(exp);
+            Map<String,Object> tMapValue=NBTUtil.getNBTTagCompoundValue(pNBTTag);
+            for(Map.Entry<String,Object> sEntry : tMapValue.entrySet()){
+                NBTSerializer.saveNBTBaseToYaml(pSection,sEntry.getKey(),sEntry.getValue());
             }
         }
     }
@@ -67,8 +129,7 @@ public class NBTSerializer{
      *            NBT
      */
     private static void saveNBTBaseToYaml(CommentedSection pSection,String pKey,Object pNBTBase){
-        int tTypeId=NBTUtil.getNBTTagTypeId(pNBTBase);
-        String tSaveKey=String.format("%02d|",tTypeId)+pKey.replace('.',NBTSerializer.RE_CHAR);
+        String tSaveKey=YamlKey.creatYamlKey(NBTUtil.getNBTTagTypeId(pNBTBase),pKey);
         if(NBTUtil.clazz_NBTTagEnd.isInstance(pNBTBase)){
             pSection.set(tSaveKey,"null");
         }else if(NBTUtil.clazz_NBTTagByte.isInstance(pNBTBase)){
@@ -138,10 +199,10 @@ public class NBTSerializer{
                 return tTag;
 
             for(String sKey : pSection.getKeys(false)){
-                Object tChildNBT=NBTSerializer.loadNBTBaseFromSection(pSection,sKey);
+                YamlKey tYamlKey=YamlKey.decodeYamlKey(sKey);
+                Object tChildNBT=NBTSerializer.loadNBTBaseFromSection(pSection,tYamlKey);
                 if(tChildNBT!=null){
-                    sKey=sKey.split("[|]",2)[1].replace(NBTSerializer.RE_CHAR,'.');
-                    NBTUtil.invokeNBTTagCompound_set(tTag,sKey,tChildNBT);
+                    NBTUtil.invokeNBTTagCompound_set(tTag,tYamlKey.mNBTKey,tChildNBT);
                 }
             }
             return tTag;
@@ -165,35 +226,24 @@ public class NBTSerializer{
      * @return 反序列化的NBT,可能为null
      * @throws NBTDeserializeException
      */
-    private static Object loadNBTBaseFromSection(CommentedSection pSection,String pKey) throws NBTDeserializeException{
-        String[] tParts=pKey.split("[|]",2);
-        if(tParts.length!=2)
-            return null;
-
-        int tTypeId=0;
-        try{
-            tTypeId=Integer.parseInt(tParts[0]);
-        }catch(NumberFormatException exp){
-            return null;
-        }
-        
-        if(tTypeId==NBTUtil.NBT_End){
+    private static Object loadNBTBaseFromSection(CommentedSection pSection,YamlKey pKey) throws NBTDeserializeException{
+        if(pKey.mNBTType==NBTUtil.NBT_End){
             return NBTUtil.newNBTTagEnd();
-        }else if(tTypeId==NBTUtil.NBT_Byte){
-            return NBTUtil.newNBTTagByte(pSection.getByte(pKey));
-        }else if(tTypeId==NBTUtil.NBT_Short){
-            return NBTUtil.newNBTTagShort(pSection.getShort(pKey));
-        }else if(tTypeId==NBTUtil.NBT_Int){
-            return NBTUtil.newNBTTagInt(pSection.getInt(pKey));
-        }else if(tTypeId==NBTUtil.NBT_Long){
-            return NBTUtil.newNBTTagLong(pSection.getLong(pKey));
-        }else if(tTypeId==NBTUtil.NBT_Float){
-            return NBTUtil.newNBTTagFloat(pSection.getFloat(pKey));
-        }else if(tTypeId==NBTUtil.NBT_Double){
-            return NBTUtil.newNBTTagDouble(pSection.getDouble(pKey));
-        }else if(tTypeId==NBTUtil.NBT_ByteArray){
+        }else if(pKey.mNBTType==NBTUtil.NBT_Byte){
+            return NBTUtil.newNBTTagByte(pSection.getByte(pKey.mStoreKey));
+        }else if(pKey.mNBTType==NBTUtil.NBT_Short){
+            return NBTUtil.newNBTTagShort(pSection.getShort(pKey.mStoreKey));
+        }else if(pKey.mNBTType==NBTUtil.NBT_Int){
+            return NBTUtil.newNBTTagInt(pSection.getInt(pKey.mStoreKey));
+        }else if(pKey.mNBTType==NBTUtil.NBT_Long){
+            return NBTUtil.newNBTTagLong(pSection.getLong(pKey.mStoreKey));
+        }else if(pKey.mNBTType==NBTUtil.NBT_Float){
+            return NBTUtil.newNBTTagFloat(pSection.getFloat(pKey.mStoreKey));
+        }else if(pKey.mNBTType==NBTUtil.NBT_Double){
+            return NBTUtil.newNBTTagDouble(pSection.getDouble(pKey.mStoreKey));
+        }else if(pKey.mNBTType==NBTUtil.NBT_ByteArray){
             List<Byte> tBList=new ArrayList<>();
-            String[] tBStrVals=pSection.getString(pKey,"").trim().split(",");
+            String[] tBStrVals=pSection.getString(pKey.mStoreKey,"").trim().split(",");
             for(String sValue : tBStrVals){
                 if((sValue=sValue.trim()).isEmpty())
                     continue;
@@ -207,25 +257,25 @@ public class NBTSerializer{
             for(int i=0;i<tBList.size();i++)
                 tBArray[i]=tBList.get(i).byteValue();
             return NBTUtil.newNBTTagByteArray(tBArray);
-        }else if(tTypeId==NBTUtil.NBT_String){
-            return NBTUtil.newNBTTagString(pSection.getString(pKey,""));
-        }else if(tTypeId==NBTUtil.NBT_List){
+        }else if(pKey.mNBTType==NBTUtil.NBT_String){
+            return NBTUtil.newNBTTagString(pSection.getString(pKey.mStoreKey,""));
+        }else if(pKey.mNBTType==NBTUtil.NBT_List){
             Object tRestoreNBT=NBTUtil.newNBTTagList();
-            CommentedSection tChildSec=pSection.getSection(pKey);
+            CommentedSection tChildSec=pSection.getSection(pKey.mStoreKey);
             if(tChildSec!=null){
                 for(String sChildKey : tChildSec.getKeys(false)){
-                    Object tChildNBT=NBTSerializer.loadNBTBaseFromSection(tChildSec,sChildKey);
+                    Object tChildNBT=NBTSerializer.loadNBTBaseFromSection(tChildSec,YamlKey.decodeYamlKey(sChildKey));
                     if(tChildNBT!=null){
                         NBTUtil.invokeNBTTagList_add(tRestoreNBT,tChildNBT);
                     }
                 }
             }
             return tRestoreNBT;
-        }else if(tTypeId==NBTUtil.NBT_Compound){
-            return NBTSerializer.deserializeNBTFromYaml(pSection.getSection(pKey));
-        }else if(tTypeId==NBTUtil.NBT_IntArray){
+        }else if(pKey.mNBTType==NBTUtil.NBT_Compound){
+            return NBTSerializer.deserializeNBTFromYaml(pSection.getSection(pKey.mStoreKey));
+        }else if(pKey.mNBTType==NBTUtil.NBT_IntArray){
             List<Integer> tIList=new ArrayList<>();
-            String[] tIStrValues=pSection.getString(pKey,"").trim().split(",");
+            String[] tIStrValues=pSection.getString(pKey.mStoreKey,"").trim().split(",");
             for(String sValue : tIStrValues){
                 if((sValue=sValue.trim()).isEmpty())
                     continue;
@@ -381,6 +431,92 @@ public class NBTSerializer{
         }catch(Throwable exp){
             throw new NBTDeserializeException(exp);
         }
+    }
+
+    // ----------------|| 包装NBT的序列化 ||----------------
+
+    /**
+     * 序列化包装NBT数据到配置节点,此数据通用
+     * 
+     * @param pNBTTag
+     *            NBT包装实例,允许为null
+     * @param pSection
+     *            配置节点
+     */
+    public static void serializeWNBTToYaml(NBTWCompound pTag,CommentedSection pSection){
+        pSection.clear();
+        if(pTag!=null){
+            pTag.writeYaml(pSection,(String)null);
+        }
+    }
+
+    /**
+     * 从配置节点载入NBT序列化数据
+     * 
+     * @param pSection
+     *            节点
+     * @return NBTWCompound实例
+     * @throws NBTDeserializeException
+     */
+    public static NBTWCompound deserializeWNBTFromYaml(CommentedSection pSection) throws NBTDeserializeException{
+        try{
+            NBTWCompound tWTag=new NBTWCompound();
+            tWTag.readYaml(pSection,(String)null);
+            return tWTag;
+        }catch(Throwable exp){
+            throw new NBTDeserializeException(exp);
+        }
+    }
+
+    /**
+     * 序列化物品的NBT
+     * 
+     * @param pWTag
+     *            要序列化的包装NBT,可以为null
+     * @return 序列化的NBT Base64数据
+     */
+    public static String serializeWNBTToByte(NBTWCompound pWTag) throws NBTSerializeException{
+        if(pWTag==null)
+            return "";
+
+        ByteArrayOutputStream tBAOStream=new ByteArrayOutputStream();
+        DataOutputStream tDOStream=null;
+        try{
+            tDOStream=new DataOutputStream(new GZIPOutputStream(tBAOStream));
+            pWTag.writeStream(tDOStream);
+            tDOStream.flush();
+        }catch(Throwable exp){
+            throw new NBTSerializeException(exp);
+        }finally{
+            IOUtil.closeStream(tDOStream);
+        }
+        return ByteUtil.byteToBase64(tBAOStream.toByteArray());
+    }
+
+    /**
+     * 反序列化由{@link #serializeWNBTToByte(NBTWCompound)创建的序列化的数据}
+     * 
+     * @param pData
+     *            序列化的Base64 NBT数据
+     * @return 反序列化的NBTWCompound实例,非null
+     * @throws NBTDeserializeException
+     */
+    public static NBTWCompound deserializeWNBTFromByte(String pData) throws NBTDeserializeException{
+        NBTWCompound tWTag=new NBTWCompound();
+        if(StringUtil.isEmpty(pData))
+            return tWTag;
+
+        DataInputStream tDIStream=null;
+        try{
+            byte[] tBData=ByteUtil.base64ToByte(pData);
+            tDIStream=new DataInputStream(new GZIPInputStream(new ByteArrayInputStream(tBData)));
+            tWTag.readStream(tDIStream);
+        }catch(Throwable exp){
+            throw new NBTDeserializeException(exp);
+        }finally{
+            IOUtil.closeStream(tDIStream);
+        }
+        return tWTag;
     }
 
 }
