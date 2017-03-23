@@ -32,6 +32,7 @@ public class NBTCompressedTools{
 
         try{
             NBTCompressedTools.compressNBTBase(pNBTTagCompound,tDOStream);
+            tDOStream.flush();
         }finally{
             tDOStream.close();
         }
