@@ -190,7 +190,7 @@ public class NBTWCompound extends NBTWBase<Map>{
         return tNBTWTag instanceof NBTWIntArray?((NBTWIntArray)tNBTWTag).getValue():new int[0];
     }
 
-    public void setByteArray(String pKey,int[] pValue){
+    public void setIntArray(String pKey,int[] pValue){
         this.set(pKey,new NBTWIntArray(pValue));
     }
 
