@@ -1,6 +1,5 @@
 package cc.bukkitPlugin.commons.nmsutil.nbt;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -116,7 +115,7 @@ public class NBTCompressedTools{
         if(pCompressedData==null||pCompressedData.length==0)
             return NBTUtil.newNBTTagCompound();
 
-        DataInputStream tDIStream=new DataInputStream(new BufferedInputStream(new GZIPInputStream(new ByteArrayInputStream(pCompressedData))));
+        DataInputStream tDIStream=new DataInputStream(new GZIPInputStream(new ByteArrayInputStream(pCompressedData)));
 
         try{
             Object tNBTTag=NBTCompressedTools.readCompressed(tDIStream);
