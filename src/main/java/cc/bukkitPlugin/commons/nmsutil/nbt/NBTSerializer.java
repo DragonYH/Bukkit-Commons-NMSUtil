@@ -16,7 +16,6 @@ import cc.bukkitPlugin.commons.nmsutil.nbt.exception.NBTDeserializeException;
 import cc.bukkitPlugin.commons.nmsutil.nbt.exception.NBTSerializeException;
 import cc.bukkitPlugin.commons.nmsutil.nbt.wapper.NBTWCompound;
 import cc.commons.commentedyaml.CommentedSection;
-import cc.commons.util.ByteUtil;
 import cc.commons.util.IOUtil;
 import cc.commons.util.StringUtil;
 
@@ -379,50 +378,53 @@ public class NBTSerializer{
     // ----------------|| 序列化NBT到GZip字节流 ||----------------
 
     /**
-     * 序列化物品的NBT
+     * 序列化物品的NBT 序列化物品的NBT
+     * <p>
+     * 返回数据长度为0表示物品不存在NBT
+     * </p>
      * 
      * @param pItem
      *            要序列化的NBT的物品来源
-     * @return 序列化的NBT Base64数据,如果物品不存在NBT,将返回null
+     * @return 序列化的NBT 字节数据,非null
      * @throws NBTSerializeException
      */
-    public static String serializeNBTToByte(ItemStack pItem) throws NBTSerializeException{
+    public static byte[] serializeNBTToByte(ItemStack pItem) throws NBTSerializeException{
         return NBTSerializer.serializeNBTToByte_Tag(NBTUtil.getItemNBT(pItem));
     }
 
     /**
      * 序列化物品的NBT
+     * <p>
+     * 返回数据长度为0表示物品不存在NBT
+     * </p>
      * 
      * @param pNBTTag
      *            要序列化的NBT
-     * @return 序列化的NBT Base64数据,如果物品不存在NBT,将返回null
+     * @return 序列化的NBT 字节数据,非null
      * @throws NBTSerializeException
      */
-    public static String serializeNBTToByte_Tag(Object pNBTTag) throws NBTSerializeException{
+    public static byte[] serializeNBTToByte_Tag(Object pNBTTag) throws NBTSerializeException{
         if(pNBTTag!=null){
             try{
-                byte[] tData=NBTCompressedTools.compressNBTCompound(pNBTTag);
-                if(tData!=null&&tData.length>0){
-                    return new String(ByteUtil.byteToBase64(tData));
-                }
+                return NBTCompressedTools.compressNBTCompound(pNBTTag);
             }catch(Throwable exp){
                 throw new NBTSerializeException(exp);
             }
         }
-        return null;
+        return new byte[0];
     }
 
     /**
      * 反序列化由{@link #serializeNBT(ItemStack)创建的序列化的数据}
      * 
      * @param pData
-     *            序列化的Base64 NBT数据
+     *            序列化的NBT 字节数据
      * @return 反序列化的NBTCompound实例,非null
      * @throws NBTDeserializeException
      */
-    public static Object deserializeNBTFromByte(String pData) throws NBTDeserializeException{
+    public static Object deserializeNBTFromByte(byte[] pData) throws NBTDeserializeException{
         try{
-            return NBTCompressedTools.readCompressed(ByteUtil.base64ToByte(pData));
+            return NBTCompressedTools.readCompressed(pData);
         }catch(Throwable exp){
             throw new NBTDeserializeException(exp);
         }
@@ -465,14 +467,17 @@ public class NBTSerializer{
 
     /**
      * 序列化物品的NBT
+     * <p>
+     * 返回数据长度为0表示物品不存在NBT
+     * </p>
      * 
      * @param pWTag
      *            要序列化的包装NBT,可以为null
-     * @return 序列化的NBT Base64数据
+     * @return 序列化的NBT 字节数据
      */
-    public static String serializeWNBTToByte(NBTWCompound pWTag) throws NBTSerializeException{
+    public static byte[] serializeWNBTToByte(NBTWCompound pWTag) throws NBTSerializeException{
         if(pWTag==null)
-            return "";
+            return new byte[0];
 
         ByteArrayOutputStream tBAOStream=new ByteArrayOutputStream();
         DataOutputStream tDOStream=null;
@@ -485,26 +490,25 @@ public class NBTSerializer{
         }finally{
             IOUtil.closeStream(tDOStream);
         }
-        return ByteUtil.byteToBase64(tBAOStream.toByteArray());
+        return tBAOStream.toByteArray();
     }
 
     /**
      * 反序列化由{@link #serializeWNBTToByte(NBTWCompound)创建的序列化的数据}
      * 
      * @param pData
-     *            序列化的Base64 NBT数据
+     *            序列化的NBT 字节数据
      * @return 反序列化的NBTWCompound实例,非null
      * @throws NBTDeserializeException
      */
-    public static NBTWCompound deserializeWNBTFromByte(String pData) throws NBTDeserializeException{
+    public static NBTWCompound deserializeWNBTFromByte(byte[] pData) throws NBTDeserializeException{
         NBTWCompound tWTag=new NBTWCompound();
-        if(StringUtil.isEmpty(pData))
+        if(pData==null||pData.length==0)
             return tWTag;
 
         DataInputStream tDIStream=null;
         try{
-            byte[] tBData=ByteUtil.base64ToByte(pData);
-            tDIStream=new DataInputStream(new GZIPInputStream(new ByteArrayInputStream(tBData)));
+            tDIStream=new DataInputStream(new GZIPInputStream(new ByteArrayInputStream(pData)));
             tWTag.readStream(tDIStream);
         }catch(Throwable exp){
             throw new NBTDeserializeException(exp);
