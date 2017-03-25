@@ -17,21 +17,25 @@ public class NBTCompressedTools{
     /**
      * 将NBTTagCompound序列化为byte[]
      * 
-     * @param pNBTTagCompound
-     *            NBTTagCompound实例
-     * @return 序列化后的字节数据
+     * @param pNBTTag
+     *            NBTTagCompound实例,允许为null
+     * @return 序列化后的字节数据,非null,0长度表示无数据
      * @throws IOException
      *             序列化过程中发生错误
      */
-    public static byte[] compressNBTCompound(Object pNBTTagCompound) throws IOException{
-        if(!NBTUtil.clazz_NBTTagCompound.isInstance(pNBTTagCompound))
+    public static byte[] compressNBTCompound(Object pNBTTag) throws IOException{
+        if(pNBTTag==null)
+            return new byte[0];
+        if(!NBTUtil.clazz_NBTTagCompound.isInstance(pNBTTag))
             throw new IOException("参数类型必须为NBTTagCompound");
+        if(NBTUtil.getNBTTagCompoundValue(pNBTTag).isEmpty())
+            return new byte[0];
 
         ByteArrayOutputStream tBAOStream=new ByteArrayOutputStream();
         DataOutputStream tDOStream=new DataOutputStream(new GZIPOutputStream(tBAOStream));
 
         try{
-            NBTCompressedTools.compressNBTBase(pNBTTagCompound,tDOStream);
+            NBTCompressedTools.compressNBTBase(pNBTTag,tDOStream);
             tDOStream.flush();
         }finally{
             tDOStream.close();
@@ -112,6 +116,15 @@ public class NBTCompressedTools{
         }
     }
 
+    /**
+     * 读取压缩的NBT数据
+     * 
+     * @param pCompressedData
+     *            压缩的NBT数据
+     * @return 反序列化的NBT实例,总是不为null
+     * @throws IOException
+     *             数据读取过程中发生异常,根节点不是NBTTagCompound
+     */
     public static Object readCompressed(byte[] pCompressedData) throws IOException{
         if(pCompressedData==null||pCompressedData.length==0)
             return NBTUtil.newNBTTagCompound();
