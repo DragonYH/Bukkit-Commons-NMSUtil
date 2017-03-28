@@ -155,7 +155,7 @@ public class NBTSerializer{
             CommentedSection tChildSec=pSection.createSection(tSaveKey);
             int i=0;
             for(Object sChildNBTBase : tListValue){
-                NBTSerializer.saveNBTBaseToYaml(tChildSec,String.format("index%02d",i),pNBTBase);
+                NBTSerializer.saveNBTBaseToYaml(tChildSec,String.format("index%02d",i),sChildNBTBase);
                 i++;
             }
         }else if(NBTUtil.clazz_NBTTagCompound.isInstance(pNBTBase)){//10
