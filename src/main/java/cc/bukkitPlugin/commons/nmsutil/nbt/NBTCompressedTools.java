@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import cc.commons.util.ClassUtil;
-
 public class NBTCompressedTools{
 
     /**
@@ -169,14 +167,14 @@ public class NBTCompressedTools{
                 Object tNBTTagList=NBTUtil.newNBTTagList();
                 length=pStream.readInt();
                 for(int i=0;i<length;i++){
-                    ClassUtil.invokeMethod(NBTUtil.method_NBTTagList_add,tNBTTagList,NBTCompressedTools.readCompressed(pStream));
+                    NBTUtil.invokeNBTTagList_add(tNBTTagList,NBTCompressedTools.readCompressed(pStream));
                 }
                 return tNBTTagList;
             case NBTUtil.NBT_Compound: // NBTTagCompound
                 Object tNBTTagCompound=NBTUtil.newNBTTagCompound();
                 length=pStream.readInt();
                 for(int i=0;i<length;i++){
-                    ClassUtil.invokeMethod(NBTUtil.method_NBTTagCompound_set,tNBTTagCompound,new Object[]{pStream.readUTF(),NBTCompressedTools.readCompressed(pStream)});
+                    NBTUtil.invokeNBTTagCompound_set(tNBTTagCompound,pStream.readUTF(),NBTCompressedTools.readCompressed(pStream));
                 }
                 return tNBTTagCompound;
             case NBTUtil.NBT_IntArray: // NBTTagIntArray

@@ -4,12 +4,14 @@ import java.lang.reflect.Method;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import cc.bukkitPlugin.commons.nmsutil.nbt.NBTSerializer;
 import cc.bukkitPlugin.commons.nmsutil.nbt.NBTUtil;
-import cc.commons.util.ClassUtil;
+import cc.commons.util.reflect.ClassUtil;
+import cc.commons.util.reflect.MethodUtil;
 
 /**
  * 一个用于获取NMS类的类
@@ -49,20 +51,20 @@ public class NMSUtil{
     static{
         clazz_CraftItemStack=NMSUtil.getCBTClass("inventory.CraftItemStack");
         clazz_CraftInventory=NMSUtil.getCBTClass("inventory.CraftInventory");
-        Method method_CraftInventory_getInventory=ClassUtil.getMethod(clazz_CraftInventory,"getInventory");
+        Method method_CraftInventory_getInventory=MethodUtil.getMethod(clazz_CraftInventory,"getInventory",true);
         clazz_IInventory=method_CraftInventory_getInventory.getReturnType();
         clazz_CraftPlayer=NMSUtil.getCBTClass("entity.CraftPlayer");
-        method_CraftPlayer_getHandle=ClassUtil.getMethod(clazz_CraftPlayer,"getHandle");
+        method_CraftPlayer_getHandle=MethodUtil.getMethod(clazz_CraftPlayer,"getHandle",true);
         clazz_EntityPlayerMP=method_CraftPlayer_getHandle.getReturnType();
         clazz_EntityPlayer=clazz_EntityPlayerMP.getSuperclass();
         clazz_NMSWorld=clazz_EntityPlayer.getDeclaredConstructors()[0].getParameterTypes()[0];
 
         // NMS ItemStck
         ItemStack tItem=new ItemStack(Material.STONE);
-        method_CraftItemStack_asNMSCopy=ClassUtil.getMethod(clazz_CraftItemStack,"asNMSCopy",ItemStack.class);
-        Object tNMSItemStack_mcitem=ClassUtil.invokeMethod(method_CraftItemStack_asNMSCopy,null,tItem);
+        method_CraftItemStack_asNMSCopy=MethodUtil.getMethod(clazz_CraftItemStack,"asNMSCopy",ItemStack.class,true);
+        Object tNMSItemStack_mcitem=MethodUtil.invokeStaticMethod(method_CraftItemStack_asNMSCopy,tItem);
         clazz_NMSItemStack=tNMSItemStack_mcitem.getClass();
-        method_CraftItemStack_asCraftMirror=ClassUtil.getMethod(clazz_CraftItemStack,"asCraftMirror",clazz_NMSItemStack);
+        method_CraftItemStack_asCraftMirror=MethodUtil.getMethod(clazz_CraftItemStack,"asCraftMirror",clazz_NMSItemStack,true);
     }
 
     /**
@@ -130,7 +132,7 @@ public class NMSUtil{
     public static Object getNMSItem(ItemStack pItem){
         if(pItem==null||pItem.getType()==Material.AIR)
             return null;
-        return ClassUtil.invokeMethod(method_CraftItemStack_asNMSCopy,null,pItem);
+        return MethodUtil.invokeStaticMethod(method_CraftItemStack_asNMSCopy,pItem);
     }
 
     /**
@@ -144,7 +146,7 @@ public class NMSUtil{
         if(!NMSUtil.clazz_NMSItemStack.isInstance(pNMSItem))
             return null;
 
-        Object tItem=ClassUtil.invokeMethod(NMSUtil.method_CraftItemStack_asCraftMirror,null,pNMSItem);
+        Object tItem=MethodUtil.invokeStaticMethod(NMSUtil.method_CraftItemStack_asCraftMirror,pNMSItem);
         if(!ItemStack.class.isInstance(tItem))
             return null;
         return (ItemStack)tItem;
@@ -207,23 +209,21 @@ public class NMSUtil{
      * @return NMS玩家或null
      */
     public static Object getNMSPlayer(Player pPlayer){
-        if(pPlayer==null)
-            return null;
-
-        if(NMSUtil.clazz_CraftPlayer.isInstance(pPlayer)){
-            return ClassUtil.invokeMethod(NMSUtil.method_CraftPlayer_getHandle,pPlayer);
-        }else{
-            if(ClassUtil.isMethodExist(pPlayer.getClass(),"getHandle")){
-                try{
-                    Object tResult=ClassUtil.invokeMethod(pPlayer.getClass(),pPlayer,"getHandle");
-                    if(NMSUtil.clazz_EntityPlayer.isInstance(tResult))
-                        return tResult;
-                }catch(Throwable exp){
-                    // ignore
-                }
+        if(pPlayer!=null){
+            if(NMSUtil.clazz_CraftPlayer.isInstance(pPlayer)){
+                return MethodUtil.invokeMethod(NMSUtil.method_CraftPlayer_getHandle,pPlayer);
+            }else{
+                return NMSUtil.getNMSEntity(pPlayer);
             }
-            return null;
         }
+        return null;
+    }
+
+    public static Object getNMSEntity(Entity pEntity){
+        if(pEntity!=null&&MethodUtil.isMethodExist(pEntity.getClass(),"getHandle",false)){
+            return MethodUtil.invokeMethod(MethodUtil.getMethod(pEntity.getClass(),"getHandle",false),pEntity);
+        }
+        return null;
     }
 
 }
