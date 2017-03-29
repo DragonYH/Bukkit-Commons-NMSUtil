@@ -33,6 +33,7 @@ public class NMSUtil{
      */
     public static final Class<?> clazz_EntityPlayerMP;
     public static final Class<?> clazz_EntityPlayer;
+    public static final Class<?> clazz_NMSEntity;
     public static final Class<?> clazz_NMSItemStack;
     public static final Class<?> clazz_NMSWorld;
     public static final Class<?> clazz_IInventory;
@@ -40,6 +41,7 @@ public class NMSUtil{
     public static final Method method_CraftItemStack_asNMSCopy;
     public static final Method method_CraftItemStack_asCraftMirror;
     public static final Method method_CraftPlayer_getHandle;
+    public static final Method method_CraftEntity_getHandle;
 
     /**
      * CraftBukkit类
@@ -53,10 +55,16 @@ public class NMSUtil{
         clazz_CraftInventory=NMSUtil.getCBTClass("inventory.CraftInventory");
         Method method_CraftInventory_getInventory=MethodUtil.getMethod(clazz_CraftInventory,"getInventory",true);
         clazz_IInventory=method_CraftInventory_getInventory.getReturnType();
+
+        Class<?> tEntityClazz=NMSUtil.getCBTClass("entity.CraftEntity");
+        method_CraftEntity_getHandle=MethodUtil.getMethod(tEntityClazz,"getHandle",true);
+        clazz_NMSEntity=method_CraftEntity_getHandle.getReturnType();
+        
         clazz_CraftPlayer=NMSUtil.getCBTClass("entity.CraftPlayer");
         method_CraftPlayer_getHandle=MethodUtil.getMethod(clazz_CraftPlayer,"getHandle",true);
         clazz_EntityPlayerMP=method_CraftPlayer_getHandle.getReturnType();
         clazz_EntityPlayer=clazz_EntityPlayerMP.getSuperclass();
+        
         clazz_NMSWorld=clazz_EntityPlayer.getDeclaredConstructors()[0].getParameterTypes()[0];
 
         // NMS ItemStck
@@ -220,8 +228,8 @@ public class NMSUtil{
     }
 
     public static Object getNMSEntity(Entity pEntity){
-        if(pEntity!=null&&MethodUtil.isMethodExist(pEntity.getClass(),"getHandle",false)){
-            return MethodUtil.invokeMethod(MethodUtil.getMethod(pEntity.getClass(),"getHandle",false),pEntity);
+        if(pEntity!=null&&NMSUtil.method_CraftEntity_getHandle.getDeclaringClass().isInstance(pEntity)){
+            return MethodUtil.invokeMethod(NMSUtil.method_CraftEntity_getHandle,pEntity);
         }
         return null;
     }
