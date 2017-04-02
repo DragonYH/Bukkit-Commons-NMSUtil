@@ -2,6 +2,14 @@ package cc.bukkitPlugin.commons.nmsutil.nbt;
 
 public class NBTKey{
 
+    /** 物品NBT 类型id */
+    public static final String ItemId="id";
+    /** 物品NBT 耐久 */
+    public static final String ItemDamage="Damage";
+    /** 物品NBT 数量 */
+    public static final String ItemCount="Count";
+    /** 物品NBT Tag节点 */
+    public static final String ItemTag="tag";
     /** NBT显示节点 ,注意不是物品名字,对应的NBT类型的NBTTagCompound */
     public static final String ItemDisplay="display";
     /** 物品显示名字节点,存在于{@link #ItemDisplay} 节点下 ,对应的NBT类型为NBTTagString */
