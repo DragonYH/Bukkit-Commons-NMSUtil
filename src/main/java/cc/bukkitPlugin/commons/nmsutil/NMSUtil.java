@@ -1,6 +1,8 @@
 package cc.bukkitPlugin.commons.nmsutil;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -8,6 +10,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import cc.bukkitPlugin.commons.nmsutil.nbt.NBTKey;
 import cc.bukkitPlugin.commons.nmsutil.nbt.NBTSerializer;
 import cc.bukkitPlugin.commons.nmsutil.nbt.NBTUtil;
 import cc.commons.util.reflect.ClassUtil;
@@ -59,12 +62,12 @@ public class NMSUtil{
         Class<?> tEntityClazz=NMSUtil.getCBTClass("entity.CraftEntity");
         method_CraftEntity_getHandle=MethodUtil.getMethod(tEntityClazz,"getHandle",true);
         clazz_NMSEntity=method_CraftEntity_getHandle.getReturnType();
-        
+
         clazz_CraftPlayer=NMSUtil.getCBTClass("entity.CraftPlayer");
         method_CraftPlayer_getHandle=MethodUtil.getMethod(clazz_CraftPlayer,"getHandle",true);
         clazz_EntityPlayerMP=method_CraftPlayer_getHandle.getReturnType();
         clazz_EntityPlayer=clazz_EntityPlayerMP.getSuperclass();
-        
+
         clazz_NMSWorld=clazz_EntityPlayer.getDeclaredConstructors()[0].getParameterTypes()[0];
 
         // NMS ItemStck
@@ -193,20 +196,31 @@ public class NMSUtil{
         if(pItem==null||pItem.getType()==Material.AIR)
             return "{}";
 
-        StringBuilder tItemJson=new StringBuilder("{id:");
+        Map<String,Object> tContent=null;
         Object tNMSItem=NMSUtil.getNMSItem(pItem);
-        if(tNMSItem!=null){
-            Object tTag=NBTUtil.saveItemToNBT_NMS(tNMSItem);
-            tItemJson.append(NBTUtil.invokeNBTTagCompound_get(tTag,"id"));
+        Object tTag=null;
+        if(tNMSItem!=null&&(tTag=NBTUtil.saveItemToNBT_NMS(tNMSItem))!=null){
+            tContent=NBTUtil.getNBTTagCompoundValue(tTag);
+            Object tItemNBT=tContent.remove(NBTKey.ItemTag);
+            if(NBTUtil.isNBTTagCompound(tItemNBT)){
+                tContent.put(NBTKey.ItemTag,NBTSerializer.serializeNBTToTellrawJson(tItemNBT));
+            }
         }else{
-            tItemJson.append(pItem.getTypeId()).append('s');
+            tContent=new HashMap<>();
+            tContent.put(NBTKey.ItemId,pItem.getTypeId()+"s");
+            tContent.put(NBTKey.ItemDamage,pItem.getTypeId()+"s");
+            tContent.put(NBTKey.ItemCount,pItem.getAmount()+"b");
         }
-        tItemJson.append(",Damage:").append(pItem.getDurability());
-        Object tagNBTTagCompound=NBTUtil.getItemNBT(pItem);
-        if(tagNBTTagCompound!=null)
-            tItemJson.append(",tag:").append(NBTSerializer.serializeNBTToTellrawJson(tagNBTTagCompound));
-        tItemJson.append('}');
-        return tItemJson.toString();
+
+        StringBuilder tItemJson=new StringBuilder("{");
+        for(Map.Entry<String,Object> sEntry : tContent.entrySet()){
+            if(tItemJson.length()!=1){
+                tItemJson.append(',');
+            }
+            tItemJson.append(sEntry.getKey()).append(':').append(sEntry.getValue().toString());
+        }
+
+        return tItemJson.append('}').toString();
     }
 
     /**
