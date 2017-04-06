@@ -160,7 +160,7 @@ public class NMSUtil{
      * @return NMS物品或null
      */
     public static Object getItemHandle(ItemStack pItem){
-        return pItem==null?null:MethodUtil.invokeMethod(method_CraftItemStack_getHandle,pItem);
+        return method_CraftItemStack_getHandle.getDeclaringClass().isInstance(pItem)?MethodUtil.invokeMethod(method_CraftItemStack_getHandle,pItem):null;
     }
 
     /**
