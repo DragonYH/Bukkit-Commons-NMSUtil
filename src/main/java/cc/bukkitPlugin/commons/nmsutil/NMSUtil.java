@@ -1,5 +1,6 @@
 package cc.bukkitPlugin.commons.nmsutil;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,6 +15,7 @@ import cc.bukkitPlugin.commons.nmsutil.nbt.NBTKey;
 import cc.bukkitPlugin.commons.nmsutil.nbt.NBTSerializer;
 import cc.bukkitPlugin.commons.nmsutil.nbt.NBTUtil;
 import cc.commons.util.reflect.ClassUtil;
+import cc.commons.util.reflect.FieldUtil;
 import cc.commons.util.reflect.MethodUtil;
 
 /**
@@ -43,7 +45,6 @@ public class NMSUtil{
 
     public static final Method method_CraftItemStack_asNMSCopy;
     public static final Method method_CraftItemStack_asCraftMirror;
-    public static final Method method_CraftItemStack_getHandle;
     public static final Method method_CraftPlayer_getHandle;
     public static final Method method_CraftEntity_getHandle;
 
@@ -54,8 +55,16 @@ public class NMSUtil{
     public static final Class<?> clazz_CraftInventory;
     public static final Class<?> clazz_CraftPlayer;
 
+    public static final Field field_CraftItemStack_handle;
+
     static{
+        // NMS ItemStck
         clazz_CraftItemStack=NMSUtil.getCBTClass("inventory.CraftItemStack");
+        method_CraftItemStack_asNMSCopy=MethodUtil.getMethod(clazz_CraftItemStack,"asNMSCopy",ItemStack.class,true);
+        clazz_NMSItemStack=method_CraftItemStack_asNMSCopy.getReturnType();
+        method_CraftItemStack_asCraftMirror=MethodUtil.getMethod(clazz_CraftItemStack,"asCraftMirror",clazz_NMSItemStack,true);
+        field_CraftItemStack_handle=FieldUtil.getField(clazz_CraftItemStack,clazz_NMSItemStack,-1,true).get(0);
+
         clazz_CraftInventory=NMSUtil.getCBTClass("inventory.CraftInventory");
         Method method_CraftInventory_getInventory=MethodUtil.getMethod(clazz_CraftInventory,"getInventory",true);
         clazz_IInventory=method_CraftInventory_getInventory.getReturnType();
@@ -71,13 +80,6 @@ public class NMSUtil{
 
         clazz_NMSWorld=clazz_EntityPlayer.getDeclaredConstructors()[0].getParameterTypes()[0];
 
-        // NMS ItemStck
-        ItemStack tItem=new ItemStack(Material.STONE);
-        method_CraftItemStack_asNMSCopy=MethodUtil.getMethod(clazz_CraftItemStack,"asNMSCopy",ItemStack.class,true);
-        method_CraftItemStack_getHandle=MethodUtil.getMethod(clazz_CraftItemStack,"getHandle",true);
-        Object tNMSItem=MethodUtil.invokeStaticMethod(method_CraftItemStack_asNMSCopy,tItem);
-        clazz_NMSItemStack=tNMSItem.getClass();
-        method_CraftItemStack_asCraftMirror=MethodUtil.getMethod(clazz_CraftItemStack,"asCraftMirror",clazz_NMSItemStack,true);
     }
 
     /**
@@ -160,7 +162,7 @@ public class NMSUtil{
      * @return NMS物品或null
      */
     public static Object getItemHandle(ItemStack pItem){
-        return method_CraftItemStack_getHandle.getDeclaringClass().isInstance(pItem)?MethodUtil.invokeMethod(method_CraftItemStack_getHandle,pItem):null;
+        return field_CraftItemStack_handle.getDeclaringClass().isInstance(pItem)?FieldUtil.getFieldValue(field_CraftItemStack_handle,pItem):null;
     }
 
     /**
@@ -203,9 +205,8 @@ public class NMSUtil{
             return null;
 
         Object tItem=MethodUtil.invokeStaticMethod(NMSUtil.method_CraftItemStack_asCraftMirror,pNMSItem);
-        if(!ItemStack.class.isInstance(tItem))
-            return null;
-        return (ItemStack)tItem;
+        return ItemStack.class.isInstance(tItem)?(ItemStack)tItem:null;
+
     }
 
     /**
