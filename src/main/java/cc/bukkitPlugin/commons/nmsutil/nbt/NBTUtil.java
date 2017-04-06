@@ -8,15 +8,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 import cc.bukkitPlugin.commons.nmsutil.NMSUtil;
+import cc.commons.util.interfaces.IFilter;
 import cc.commons.util.reflect.ClassUtil;
 import cc.commons.util.reflect.FieldUtil;
 import cc.commons.util.reflect.MethodUtil;
-import cc.commons.util.interfaces.IFilter;
 
 public class NBTUtil{
 
@@ -35,7 +34,6 @@ public class NBTUtil{
     public static final int NBT_Compound=10;
     public static final int NBT_IntArray=11;
 
-    public static final Class<?> clazz_NMSItemStack;
     public static final Class<?> clazz_NBTBase;
     public static final Class<?> clazz_NBTTagByte;
     public static final Class<?> clazz_NBTTagShort;
@@ -55,7 +53,6 @@ public class NBTUtil{
     public static final Method method_NMSItemStack_saveToNBT;
     public static final Method method_NMSItemStack_loadFromNBT;
 
-    public static final Method method_CraftItemStack_asNMSCopy;
     public static final Method method_NBTBase_getTypeId;
     public static final Method method_NBTBase_copy;
     public static final Method method_NBTTagCompound_isEmpty;
@@ -81,15 +78,7 @@ public class NBTUtil{
     public static final Field field_NMSItemStack_tag;
 
     static{
-        String className=Bukkit.getServer().getClass().getPackage().getName();
-        String tMCVersion=className.substring(className.lastIndexOf('.')+1);
-        Class<?> tClassCraftItemStack=ClassUtil.getClass("org.bukkit.craftbukkit."+tMCVersion+".inventory.CraftItemStack");
-        ItemStack tItem=new ItemStack(Material.STONE);
-        method_CraftItemStack_asNMSCopy=MethodUtil.getMethod(tClassCraftItemStack,"asNMSCopy",ItemStack.class,true);
-        Object tNMSItemStack_mcitem=MethodUtil.invokeStaticMethod(method_CraftItemStack_asNMSCopy,tItem);
-        clazz_NMSItemStack=tNMSItemStack_mcitem.getClass();
-
-        method_NMSItemStack_getTag=MethodUtil.getMethod(NBTUtil.clazz_NMSItemStack,new IFilter<Method>(){
+        method_NMSItemStack_getTag=MethodUtil.getMethod(NMSUtil.clazz_NMSItemStack,new IFilter<Method>(){
 
             @Override
             public boolean accept(Method pObj){
@@ -134,36 +123,19 @@ public class NBTUtil{
         field_NBTTagByteArray_value=FieldUtil.getField(clazz_NBTTagByteArray,byte[].class,-1,true).get(0);
         field_NBTTagIntArray_value=FieldUtil.getField(clazz_NBTTagIntArray,int[].class,-1,true).get(0);
         field_NBTTagCompound_map=FieldUtil.getField(clazz_NBTTagCompound,Map.class,-1,true).get(0);
-        field_NMSItemStack_tag=FieldUtil.getField(NBTUtil.clazz_NMSItemStack,clazz_NBTTagCompound,-1,true).get(0);
+        field_NMSItemStack_tag=FieldUtil.getField(NMSUtil.clazz_NMSItemStack,clazz_NBTTagCompound,-1,true).get(0);
         // ItemStack
-        method_NMSItemStack_saveToNBT=MethodUtil.getUnknowMethod(NBTUtil.clazz_NMSItemStack,clazz_NBTTagCompound,clazz_NBTTagCompound,true).get(0);
-        ArrayList<Method> tMethods=MethodUtil.getUnknowMethod(NBTUtil.clazz_NMSItemStack,void.class,clazz_NBTTagCompound,true);
+        method_NMSItemStack_saveToNBT=MethodUtil.getUnknowMethod(NMSUtil.clazz_NMSItemStack,clazz_NBTTagCompound,clazz_NBTTagCompound,true).get(0);
+        ArrayList<Method> tMethods=MethodUtil.getUnknowMethod(NMSUtil.clazz_NMSItemStack,void.class,clazz_NBTTagCompound,true);
         int setTagMethodIndex=0;
         Object tTag=ClassUtil.newInstance(clazz_NBTTagCompound);
-        Object tNMSItem=NBTUtil.getNMSItem(tItem);
+        Object tNMSItem=NMSUtil.getNMSItem(new ItemStack(Material.STONE,1,(short)0));
         MethodUtil.invokeMethod(tMethods.get(setTagMethodIndex),tNMSItem,tTag);
         if(FieldUtil.getFieldValue(field_NMSItemStack_tag,tNMSItem)!=tTag){
             setTagMethodIndex=1;
         }
         method_NMSItemStack_setTag=tMethods.get(setTagMethodIndex);
         method_NMSItemStack_loadFromNBT=tMethods.get(1-setTagMethodIndex);
-    }
-
-    /**
-     * 获取Bukkit物品对应的MC物品
-     * <p>
-     * 此函数设置的目的为分离NBT模块
-     * </p>
-     * 
-     * @param pItem
-     *            Bukkit物品实例
-     * @return NMS ItemStack实例或者null
-     * @see {@link NMSUtil#getNMSItem(ItemStack)}
-     */
-    public static Object getNMSItem(ItemStack pItem){
-        if(pItem==null||pItem.getType()==Material.AIR)
-            return null;
-        return MethodUtil.invokeStaticMethod(NBTUtil.method_CraftItemStack_asNMSCopy,pItem);
     }
 
     /**
@@ -174,7 +146,7 @@ public class NBTUtil{
      * @return 物品NBT,非null
      */
     public static Object getItemNBT(ItemStack pItem){
-        return NBTUtil.getItemNBT_NMS(NBTUtil.getNMSItem(pItem));
+        return NBTUtil.getItemNBT_NMS(NMSUtil.getNMSItem(pItem));
     }
 
     /**
@@ -202,11 +174,19 @@ public class NBTUtil{
      *            Bukkit物品
      * @param pNBTTag
      *            NBT
+     * @return 设置了NBT的物品,可能为原物品
      */
     public static ItemStack setItemNBT(ItemStack pItem,Object pNBTTag){
-        Object tNMSItem=NBTUtil.getNMSItem(pItem);
-        NBTUtil.setItemNBT_NMS(tNMSItem,pNBTTag);
-        return NMSUtil.getCBTItem(tNMSItem);
+        Object tNMSItem=NMSUtil.getItemHandle(pItem);
+        if(tNMSItem!=null){
+            NBTUtil.setItemNBT_NMS(tNMSItem,pNBTTag);
+        }else{
+            tNMSItem=NMSUtil.asNMSItemCopy(pItem);
+            NBTUtil.setItemNBT_NMS(tNMSItem,pNBTTag);
+            pItem=NMSUtil.getCBTItem(tNMSItem);
+        }
+
+        return pItem;
     }
 
     /**
@@ -231,7 +211,7 @@ public class NBTUtil{
      * @return NBT数据
      */
     public static Object saveItemToNBT(ItemStack pItem){
-        return NBTUtil.saveItemToNBT_NMS(NBTUtil.getNMSItem(pItem));
+        return NBTUtil.saveItemToNBT_NMS(NMSUtil.getNMSItem(pItem));
     }
 
     /**

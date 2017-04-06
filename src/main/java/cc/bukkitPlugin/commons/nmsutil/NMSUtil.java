@@ -43,6 +43,7 @@ public class NMSUtil{
 
     public static final Method method_CraftItemStack_asNMSCopy;
     public static final Method method_CraftItemStack_asCraftMirror;
+    public static final Method method_CraftItemStack_getHandle;
     public static final Method method_CraftPlayer_getHandle;
     public static final Method method_CraftEntity_getHandle;
 
@@ -73,8 +74,9 @@ public class NMSUtil{
         // NMS ItemStck
         ItemStack tItem=new ItemStack(Material.STONE);
         method_CraftItemStack_asNMSCopy=MethodUtil.getMethod(clazz_CraftItemStack,"asNMSCopy",ItemStack.class,true);
-        Object tNMSItemStack_mcitem=MethodUtil.invokeStaticMethod(method_CraftItemStack_asNMSCopy,tItem);
-        clazz_NMSItemStack=tNMSItemStack_mcitem.getClass();
+        method_CraftItemStack_getHandle=MethodUtil.getMethod(clazz_CraftItemStack,"getHandle",true);
+        Object tNMSItem=MethodUtil.invokeStaticMethod(method_CraftItemStack_asNMSCopy,tItem);
+        clazz_NMSItemStack=tNMSItem.getClass();
         method_CraftItemStack_asCraftMirror=MethodUtil.getMethod(clazz_CraftItemStack,"asCraftMirror",clazz_NMSItemStack,true);
     }
 
@@ -134,7 +136,7 @@ public class NMSUtil{
     }
 
     /**
-     * 获取Bukkit物品对应的MC物品
+     * 获取Bukkit物品对应的MC物品,可能获取到被包装的NMS实例
      * 
      * @param pItem
      *            Bukkit物品实例
@@ -143,7 +145,50 @@ public class NMSUtil{
     public static Object getNMSItem(ItemStack pItem){
         if(pItem==null||pItem.getType()==Material.AIR)
             return null;
-        return MethodUtil.invokeStaticMethod(method_CraftItemStack_asNMSCopy,pItem);
+        Object tNMSItem=NMSUtil.getItemHandle(pItem);
+        if(tNMSItem==null){
+            tNMSItem=NMSUtil.asNMSItemCopy(pItem);
+        }
+        return tNMSItem;
+    }
+
+    /**
+     * 获取Bukkit包装的NMS物品实例
+     * 
+     * @param pItem
+     *            Bukkit物品
+     * @return NMS物品或null
+     */
+    public static Object getItemHandle(ItemStack pItem){
+        return pItem==null?null:MethodUtil.invokeMethod(method_CraftItemStack_getHandle,pItem);
+    }
+
+    /**
+     * 获取Bukkit包装的NMS物品实例
+     * 
+     * @param pItem
+     *            Bukkit物品
+     * @return NMS物品或null
+     */
+    public static Object asNMSItemCopy(ItemStack pItem){
+        return pItem==null?null:MethodUtil.invokeStaticMethod(method_CraftItemStack_asNMSCopy,pItem);
+    }
+
+    /**
+     * 判断两个物品所包装的NMS实例是否为同一个
+     * 
+     * @param pItem1
+     *            物品1
+     * @param pItem2
+     *            物品1
+     * @return 是否为同一个实例
+     */
+    public static Object isSameNMSItem(ItemStack pItem1,ItemStack pItem2){
+        if(pItem1==null||pItem2==null)
+            return false;
+        Object tNMSItem1=MethodUtil.invokeMethod(method_CraftEntity_getHandle,pItem1);
+        Object tNMSItem2=MethodUtil.invokeMethod(method_CraftEntity_getHandle,pItem2);
+        return tNMSItem1!=null&&tNMSItem2!=null&&tNMSItem1==tNMSItem2;
     }
 
     /**
