@@ -40,7 +40,6 @@ public class NMSUtil{
     public static final Class<?> clazz_EntityPlayer;
     public static final Class<?> clazz_NMSEntity;
     public static final Class<?> clazz_NMSItemStack;
-    public static final Class<?> clazz_NMSWorld;
     public static final Class<?> clazz_IInventory;
 
     public static final Method method_CraftItemStack_asNMSCopy;
@@ -77,9 +76,6 @@ public class NMSUtil{
         method_CraftPlayer_getHandle=MethodUtil.getMethod(clazz_CraftPlayer,"getHandle",true);
         clazz_EntityPlayerMP=method_CraftPlayer_getHandle.getReturnType();
         clazz_EntityPlayer=clazz_EntityPlayerMP.getSuperclass();
-
-        clazz_NMSWorld=clazz_EntityPlayer.getDeclaredConstructors()[0].getParameterTypes()[0];
-
     }
 
     /**
