@@ -26,6 +26,8 @@ public class NBTKey{
     public static final String EnchantLevel="lvl";
     /** 物品修复花费 */
     public static final String Repait="RepairCost";
+    /** 不可破坏 */
+    public static final String Unbreakable="Unbreakable";
 
     /** 物品修饰属性容器节点 */
     public static final String Attributes="AttributeModifiers";
