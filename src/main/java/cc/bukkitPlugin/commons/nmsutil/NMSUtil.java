@@ -14,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import cc.bukkitPlugin.commons.nmsutil.nbt.NBTKey;
 import cc.bukkitPlugin.commons.nmsutil.nbt.NBTSerializer;
 import cc.bukkitPlugin.commons.nmsutil.nbt.NBTUtil;
+import cc.commons.util.interfaces.IFilter;
 import cc.commons.util.reflect.ClassUtil;
 import cc.commons.util.reflect.FieldUtil;
 import cc.commons.util.reflect.MethodUtil;
@@ -73,7 +74,14 @@ public class NMSUtil{
         clazz_NMSEntity=method_CraftEntity_getHandle.getReturnType();
 
         clazz_CraftPlayer=NMSUtil.getCBTClass("entity.CraftPlayer");
-        method_CraftPlayer_getHandle=MethodUtil.getMethod(clazz_CraftPlayer,"getHandle",true);
+        method_CraftPlayer_getHandle=MethodUtil.getMethod(clazz_CraftPlayer,new IFilter<Method>(){
+
+            @Override
+            public boolean accept(Method pObj){
+                // Birdge
+                return pObj.getName().equals("getHandle")&&(pObj.getModifiers()&0x00000040)==0;
+            }
+        },true).get(0);
         clazz_EntityPlayerMP=method_CraftPlayer_getHandle.getReturnType();
         clazz_EntityPlayer=clazz_EntityPlayerMP.getSuperclass();
     }
