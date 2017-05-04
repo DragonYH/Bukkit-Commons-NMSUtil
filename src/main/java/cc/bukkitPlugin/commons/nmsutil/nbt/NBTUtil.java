@@ -592,7 +592,7 @@ public class NBTUtil{
      * @return 克隆的NBTTagCompound,或新的空NBTTagCompound
      */
     public static Object invokeNBTTagCompound_clone(Object pNBTTagCompound){
-        return pNBTTagCompound!=null?NBTUtil.newNBTTagCompound():MethodUtil.invokeMethod(NBTUtil.method_NBTBase_copy,pNBTTagCompound);
+        return pNBTTagCompound==null?NBTUtil.newNBTTagCompound():MethodUtil.invokeMethod(NBTUtil.method_NBTBase_copy,pNBTTagCompound);
     }
 
     public static Object newNBTTagIntArray(int[] pValue){
