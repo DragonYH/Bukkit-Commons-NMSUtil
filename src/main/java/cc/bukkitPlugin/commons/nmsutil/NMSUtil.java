@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -23,7 +24,6 @@ import cc.commons.util.reflect.MethodUtil;
  * 一个用于获取NMS类的类
  * 
  * @author 聪聪
- *
  */
 public class NMSUtil{
 
@@ -47,6 +47,7 @@ public class NMSUtil{
     public static final Method method_CraftItemStack_asCraftMirror;
     public static final Method method_CraftPlayer_getHandle;
     public static final Method method_CraftEntity_getHandle;
+    public static final Method method_CraftWorld_getHandle;
 
     /**
      * CraftBukkit类
@@ -84,6 +85,9 @@ public class NMSUtil{
         },true).get(0);
         clazz_EntityPlayerMP=method_CraftPlayer_getHandle.getReturnType();
         clazz_EntityPlayer=clazz_EntityPlayerMP.getSuperclass();
+
+        Class<?> tClazz=NMSUtil.getCBTClass("CraftWorld");
+        method_CraftWorld_getHandle=MethodUtil.getMethod(tClazz,"getHandle",true);
     }
 
     /**
@@ -294,6 +298,20 @@ public class NMSUtil{
     public static Object getNMSEntity(Entity pEntity){
         if(pEntity!=null&&NMSUtil.method_CraftEntity_getHandle.getDeclaringClass().isInstance(pEntity)){
             return MethodUtil.invokeMethod(NMSUtil.method_CraftEntity_getHandle,pEntity);
+        }
+        return null;
+    }
+
+    /**
+     * 获取NMS的world
+     * 
+     * @param pWorld
+     *            Bukkit的world实例
+     * @return NMS的world实例,类型一般为WorldServer
+     */
+    public static Object getNMSWorld(World pWorld){
+        if(pWorld!=null&&NMSUtil.method_CraftWorld_getHandle.getDeclaringClass().isInstance(pWorld)){
+            return MethodUtil.invokeMethod(NMSUtil.method_CraftWorld_getHandle,pWorld);
         }
         return null;
     }
