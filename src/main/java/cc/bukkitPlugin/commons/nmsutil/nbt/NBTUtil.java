@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -624,31 +625,35 @@ public class NBTUtil{
         Map<String,Object> tMixMapValue=NBTUtil.getNBTTagCompoundValue(tNewTag);
         Map<String,Object> tDesMapValue=NBTUtil.getNBTTagCompoundValueSafe(pNBTTagDes);
         Map<String,Object> tSrcMapValue=NBTUtil.getNBTTagCompoundValueSafe(pNBTTagSrc);
-        for(Map.Entry<String,Object> sEntry : tDesMapValue.entrySet()){
-            String tKey=sEntry.getKey();
-            Object tSrcEle=tSrcMapValue.get(sEntry.getKey());
-            if(tSrcEle==null){
-                tMixMapValue.put(tKey,NBTUtil.invokeNBTTagCopy(sEntry.getValue()));
-            }else{
-                if(tSrcEle.getClass()==sEntry.getValue().getClass()){
+        HashSet<String> tKeys=new HashSet<>(tDesMapValue.keySet());
+        tKeys.addAll(tSrcMapValue.keySet());
+        for(String sKey : tKeys){
+            Object tDesEle=tDesMapValue.get(sKey);
+            Object tSrcEle=tSrcMapValue.get(sKey);
+            if(tSrcEle==null&&tDesEle!=null){
+                tMixMapValue.put(sKey,NBTUtil.invokeNBTTagCopy(tDesEle));
+            }else if(tDesEle==null&&tSrcEle!=null){
+                tMixMapValue.put(sKey,NBTUtil.invokeNBTTagCopy(tSrcEle));
+            }else if(tDesEle!=null&&tSrcEle!=null){
+                if(tSrcEle.getClass()==tDesEle.getClass()){
                     if(NBTUtil.isNBTTagCompound(tSrcEle)){
-                        tMixMapValue.put(tKey,NBTUtil.mixNBT(sEntry.getValue(),tSrcEle,pRelaceDes));
+                        tMixMapValue.put(sKey,NBTUtil.mixNBT(tDesEle,tSrcEle,pRelaceDes));
                         continue;
                     }else if(NBTUtil.isNBTTagList(tSrcEle)){
                         Object tStoreTarget;
-                        if(NBTUtil.getNBTTagListValue(sEntry.getValue()).isEmpty()){
+                        if(NBTUtil.getNBTTagListValue(tDesEle).isEmpty()){
                             tStoreTarget=tSrcEle;
                         }else if(NBTUtil.getNBTTagListValue(tSrcEle).isEmpty()){
-                            tStoreTarget=sEntry.getValue();
+                            tStoreTarget=tDesEle;
                         }else{
-                            tStoreTarget=pRelaceDes?tSrcEle:sEntry.getValue();
+                            tStoreTarget=pRelaceDes?tSrcEle:tDesEle;
                         }
-                        tMixMapValue.put(tKey,NBTUtil.invokeNBTTagCopy(tStoreTarget));
+                        tMixMapValue.put(sKey,NBTUtil.invokeNBTTagCopy(tStoreTarget));
                         continue;
                     }
                 }
-                Object tStoreTarget=pRelaceDes?tSrcEle:sEntry.getValue();
-                tMixMapValue.put(tKey,NBTUtil.invokeNBTTagCopy(tStoreTarget));
+                Object tStoreTarget=pRelaceDes?tSrcEle:tDesEle;
+                tMixMapValue.put(sKey,NBTUtil.invokeNBTTagCopy(tStoreTarget));
             }
         }
         return tNewTag;
