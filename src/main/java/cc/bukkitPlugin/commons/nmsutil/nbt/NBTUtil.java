@@ -36,18 +36,18 @@ public class NBTUtil{
     public static final int NBT_IntArray=11;
 
     public static final Class<?> clazz_NBTBase;
+    public static final Class<?> clazz_NBTTagEnd;
     public static final Class<?> clazz_NBTTagByte;
     public static final Class<?> clazz_NBTTagShort;
     public static final Class<?> clazz_NBTTagInt;
     public static final Class<?> clazz_NBTTagLong;
     public static final Class<?> clazz_NBTTagFloat;
     public static final Class<?> clazz_NBTTagDouble;
-    public static final Class<?> clazz_NBTTagEnd;
     public static final Class<?> clazz_NBTTagByteArray;
     public static final Class<?> clazz_NBTTagString;
-    public static final Class<?> clazz_NBTTagIntArray;
     public static final Class<?> clazz_NBTTagList;
     public static final Class<?> clazz_NBTTagCompound;
+    public static final Class<?> clazz_NBTTagIntArray;
 
     public static final Method method_NMSItemStack_getTag;
     public static final Method method_NMSItemStack_setTag;
@@ -73,6 +73,7 @@ public class NBTUtil{
     public static final Field field_NBTTagDouble_value;
     public static final Field field_NBTTagLong_value;
     public static final Field field_NBTTagList_value;
+    public static final Field field_NBTTagList_valueType;
     public static final Field field_NBTTagByteArray_value;
     public static final Field field_NBTTagIntArray_value;
     public static final Field field_NBTTagCompound_map;
@@ -121,6 +122,7 @@ public class NBTUtil{
         field_NBTTagLong_value=FieldUtil.getField(clazz_NBTTagLong,long.class,-1,true).get(0);
         field_NBTTagString_value=FieldUtil.getField(clazz_NBTTagString,String.class,Modifier.PRIVATE,true).get(0);
         field_NBTTagList_value=FieldUtil.getField(clazz_NBTTagList,List.class,-1,true).get(0);
+        field_NBTTagList_valueType=FieldUtil.getField(clazz_NBTTagList,byte.class,-1,true).get(0);
         field_NBTTagByteArray_value=FieldUtil.getField(clazz_NBTTagByteArray,byte[].class,-1,true).get(0);
         field_NBTTagIntArray_value=FieldUtil.getField(clazz_NBTTagIntArray,int[].class,-1,true).get(0);
         field_NBTTagCompound_map=FieldUtil.getField(clazz_NBTTagCompound,Map.class,-1,true).get(0);
@@ -325,6 +327,45 @@ public class NBTUtil{
         return (byte)MethodUtil.invokeMethod(NBTUtil.method_NBTBase_getTypeId,pNBTTag);
     }
 
+    /**
+     * 根据NBT的类型id获取NBT类型
+     * <p>
+     * 注意,不判定{@link #NBT_Number}为一种类型
+     * </p>
+     * @param pTypeId 类型id
+     * @return NBT的类型,如果未找到,返回null
+     */
+    public static Class<?> getNBTTypeById(int pTypeId){
+        switch(pTypeId){
+            case NBT_End:
+                return clazz_NBTTagEnd;
+            case NBT_Byte:
+                return clazz_NBTTagByte;
+            case NBT_Short:
+                return clazz_NBTTagShort;
+            case NBT_Int:
+                return clazz_NBTTagInt;
+            case NBT_Long:
+                return clazz_NBTTagLong;
+            case NBT_Float:
+                return clazz_NBTTagFloat;
+            case NBT_Double:
+                return clazz_NBTTagDouble;
+            case NBT_ByteArray:
+                return clazz_NBTTagByteArray;
+            case NBT_String:
+                return clazz_NBTTagString;
+            case NBT_List:
+                return clazz_NBTTagList;
+            case NBT_Compound:
+                return clazz_NBTTagCompound;
+            case NBT_IntArray:
+                return clazz_NBTTagIntArray;
+            default:
+                return null;
+        }
+    }
+
     public static Object invokeNBTTagCopy(Object pNBTTag){
         return MethodUtil.invokeMethod(NBTUtil.method_NBTBase_copy,pNBTTag);
     }
@@ -476,6 +517,16 @@ public class NBTUtil{
         MethodUtil.invokeMethod(NBTUtil.method_NBTTagList_add,pNBTTagList,pNBTBase);
     }
 
+    public static Class<?> getNBTTagListValueType(Object pNBTList){
+        List<Object> tListValue=NBTUtil.getNBTTagListValue(pNBTList);
+        if(!tListValue.isEmpty()){
+            return tListValue.get(0).getClass();
+        }else{
+            int tId=(byte)FieldUtil.getFieldValue(field_NBTTagList_valueType,pNBTList);
+            return tId==0?null:NBTUtil.getNBTTypeById(tId);
+        }
+    }
+
     /**
      * 获取一个新的NBTTagCompound实例
      * 
@@ -598,6 +649,10 @@ public class NBTUtil{
 
     public static Object newNBTTagIntArray(int[] pValue){
         return ClassUtil.newInstance(NBTUtil.clazz_NBTTagIntArray,int[].class,pValue);
+    }
+
+    public static boolean isNBTTagIntArray(Object pObj){
+        return NBTUtil.clazz_NBTTagIntArray.isInstance(pObj);
     }
 
     @SuppressWarnings("unchecked")
