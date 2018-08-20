@@ -13,7 +13,7 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 import cc.bukkitPlugin.commons.nmsutil.NMSUtil;
-import cc.commons.util.interfaces.IFilter;
+import cc.commons.util.extra.CList;
 import cc.commons.util.reflect.ClassUtil;
 import cc.commons.util.reflect.FieldUtil;
 import cc.commons.util.reflect.MethodUtil;
@@ -82,14 +82,25 @@ public class NBTUtil{
     public static final Field field_NMSItemStack_tag;
 
     static{
-        method_NMSItemStack_getTag=MethodUtil.getMethod(NMSUtil.clazz_NMSItemStack,new IFilter<Method>(){
-
-            @Override
-            public boolean accept(Method pObj){
-                return pObj.getReturnType().getSimpleName().equals("NBTTagCompound")&&pObj.getParameterTypes().length==0;
+        CList<Method> tMethods=MethodUtil.getDeclaredMethod(NMSUtil.clazz_NMSItemStack,MethodFilter.c()
+                .noParam().addFilter((pMethod)->pMethod.getReturnType().getSimpleName().equals("NBTTagCompound")));
+        if(tMethods.onlyOne()){
+            method_NMSItemStack_getTag=tMethods.oneGet();
+        }else{
+            int tPos=-1;
+            Object tNMSItem=NMSUtil.getNMSItem(new ItemStack(Material.STONE));
+            FieldUtil.setFieldValue(FieldUtil.getDeclaredField(NMSUtil.clazz_NMSItemStack,FieldFilter.t(tMethods.first().getReturnType()))
+                    .oneGet(),tNMSItem,(Object)null);
+            for(int i=tMethods.size();i>=0;i--){
+                if(MethodUtil.invokeMethod(tMethods.get(i),tNMSItem)==null){
+                    tPos=i;
+                    break;
+                }
             }
+            method_NMSItemStack_getTag=tPos!=-1?tMethods.get(tPos):null;
+            if(tPos==-1) throw new IllegalStateException("Cann't init nbtutil");
+        }
 
-        },true).oneGet();
         clazz_NBTTagCompound=method_NMSItemStack_getTag.getReturnType();
         String tPacketPath=ClassUtil.getClassPacket(clazz_NBTTagCompound.getName());
         clazz_NBTBase=ClassUtil.getClass(tPacketPath+"NBTBase");
@@ -108,12 +119,16 @@ public class NBTUtil{
         method_NBTBase_getTypeId=MethodUtil.getDeclaredMethod(clazz_NBTBase,MethodFilter.rt(byte.class).noParam()).oneGet();
         method_NBTBase_copy=MethodUtil.getDeclaredMethod(clazz_NBTBase,MethodFilter.rt(clazz_NBTBase).noParam()).oneGet();
         method_NBTTagCompound_isEmpty=MethodUtil.getDeclaredMethod(clazz_NBTTagCompound,MethodFilter.rt(boolean.class).noParam()).oneGet();
-        method_NBTTagCompound_hasKeyOfType=MethodUtil.getDeclaredMethod(clazz_NBTTagCompound,MethodFilter.rpt(boolean.class,String.class,int.class)).oneGet();
+        method_NBTTagCompound_hasKeyOfType=MethodUtil.getDeclaredMethod(clazz_NBTTagCompound,
+                MethodFilter.rpt(boolean.class,String.class,int.class)).oneGet();
         method_NBTTagCompound_get=MethodUtil.getDeclaredMethod(clazz_NBTTagCompound,MethodFilter.rpt(clazz_NBTBase,String.class)).oneGet();
         method_NBTTagCompound_getInt=MethodUtil.getDeclaredMethod(clazz_NBTTagCompound,MethodFilter.rpt(int.class,String.class)).oneGet();
-        method_NBTTagCompound_getString=MethodUtil.getDeclaredMethod(clazz_NBTTagCompound,MethodFilter.rpt(String.class,String.class)).oneGet();
-        method_NBTTagCompound_getList=MethodUtil.getDeclaredMethod(clazz_NBTTagCompound,MethodFilter.rpt(clazz_NBTTagList,String.class,int.class)).oneGet();
-        method_NBTTagCompound_set=MethodUtil.getDeclaredMethod(clazz_NBTTagCompound,MethodFilter.rpt(void.class,String.class,clazz_NBTBase)).oneGet();
+        method_NBTTagCompound_getString=MethodUtil.getDeclaredMethod(clazz_NBTTagCompound,
+                MethodFilter.rpt(String.class,String.class).addDeniedModifer(Modifier.STATIC)).oneGet();
+        method_NBTTagCompound_getList=MethodUtil.getDeclaredMethod(clazz_NBTTagCompound,
+                MethodFilter.rpt(clazz_NBTTagList,String.class,int.class)).oneGet();
+        method_NBTTagCompound_set=MethodUtil.getDeclaredMethod(clazz_NBTTagCompound,
+                MethodFilter.rpt(void.class,String.class,clazz_NBTBase)).oneGet();
         if(MethodUtil.isDeclaredMethodExist(clazz_NBTTagList,MethodFilter.rpt(void.class,clazz_NBTBase))){
             method_NBTTagList_add=MethodUtil.getDeclaredMethod(clazz_NBTTagList,MethodFilter.rpt(void.class,clazz_NBTBase)).oneGet();
         }else{
@@ -136,7 +151,7 @@ public class NBTUtil{
         field_NMSItemStack_tag=FieldUtil.getDeclaredField(NMSUtil.clazz_NMSItemStack,FieldFilter.t(clazz_NBTTagCompound)).oneGet();
         // ItemStack
         method_NMSItemStack_saveToNBT=MethodUtil.getDeclaredMethod(NMSUtil.clazz_NMSItemStack,MethodFilter.rpt(clazz_NBTTagCompound,clazz_NBTTagCompound)).oneGet();
-        ArrayList<Method> tMethods=MethodUtil.getDeclaredMethod(NMSUtil.clazz_NMSItemStack,MethodFilter.rpt(void.class,clazz_NBTTagCompound));
+        tMethods=MethodUtil.getDeclaredMethod(NMSUtil.clazz_NMSItemStack,MethodFilter.rpt(void.class,clazz_NBTTagCompound));
         int setTagMethodIndex=0;
         Object tTag=ClassUtil.newInstance(clazz_NBTTagCompound);
         Object tNMSItem=NMSUtil.getNMSItem(new ItemStack(Material.STONE,1,(short)0));
