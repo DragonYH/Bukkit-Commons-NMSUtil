@@ -95,7 +95,7 @@ public class NMSUtil{
         clazz_NMSItemStack=method_CraftItemStack_asNMSCopy.getReturnType();
         method_CraftItemStack_asCraftMirror=MethodUtil.getMethod(clazz_CraftItemStack,"asCraftMirror",clazz_NMSItemStack);
         MH_CraftItemStack_asCraftMirror=LookupUtil.unreflect(tLookup,method_CraftItemStack_asCraftMirror);
-        field_CraftItemStack_handle=FieldUtil.getDeclaredField(clazz_CraftItemStack,FieldFilter.pt(clazz_NMSItemStack)).first();
+        field_CraftItemStack_handle=FieldUtil.getDeclaredField(clazz_CraftItemStack,FieldFilter.pt(clazz_NMSItemStack)).oneGet();
 
         clazz_CraftInventory=NMSUtil.getCBTClass("inventory.CraftInventory");
         Method method_CraftInventory_getInventory=MethodUtil.getMethod(clazz_CraftInventory,"getInventory",true);
@@ -107,7 +107,7 @@ public class NMSUtil{
         clazz_NMSEntity=method_CraftEntity_getHandle.getReturnType();
 
         clazz_CraftPlayer=NMSUtil.getCBTClass("entity.CraftPlayer");
-        method_CraftPlayer_getHandle=MethodUtil.getDeclaredMethod(clazz_CraftPlayer,MethodFilter.pn("getHandle")).first();
+        method_CraftPlayer_getHandle=MethodUtil.getDeclaredMethod(clazz_CraftPlayer,MethodFilter.pn("getHandle")).oneGet();
         MH_CraftPlayer_getHandle=LookupUtil.unreflect(method_CraftPlayer_getHandle);
         clazz_EntityPlayerMP=method_CraftPlayer_getHandle.getReturnType();
         clazz_EntityPlayer=clazz_EntityPlayerMP.getSuperclass();
