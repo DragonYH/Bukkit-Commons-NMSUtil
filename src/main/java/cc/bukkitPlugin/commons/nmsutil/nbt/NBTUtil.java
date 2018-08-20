@@ -716,7 +716,7 @@ public class NBTUtil{
                         continue;
                     }
                 }
-                Object tStoreTarget=pRelaceDes?tSrcEle:tDesEle;
+                Object tStoreTarget=pRelaceDes&&!tSrcEle.toString().equals("\"minecraft:empty\"")?tSrcEle:tDesEle;
                 tMixMapValue.put(sKey,NBTUtil.invokeNBTTagCopy(tStoreTarget));
             }
         }
