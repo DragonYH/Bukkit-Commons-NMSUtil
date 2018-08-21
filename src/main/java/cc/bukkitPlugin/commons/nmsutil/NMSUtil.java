@@ -123,6 +123,10 @@ public class NMSUtil{
     public static String getBukkitAPIVersion(){
         return NMSUtil.mAPIVersion.get();
     }
+    
+    public static String getMinecraftVersion(){
+        return NMSUtil.mMCVersion.get();
+    }
 
     /**
      * 获取org.bukkit.craftbukkit类的全名
