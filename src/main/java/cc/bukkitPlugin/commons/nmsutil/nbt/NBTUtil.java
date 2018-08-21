@@ -13,6 +13,7 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 import cc.bukkitPlugin.commons.nmsutil.NMSUtil;
+import cc.commons.util.ToolKit;
 import cc.commons.util.extra.CList;
 import cc.commons.util.reflect.ClassUtil;
 import cc.commons.util.reflect.FieldUtil;
@@ -89,9 +90,9 @@ public class NBTUtil{
         }else{
             int tPos=-1;
             Object tNMSItem=NMSUtil.getNMSItem(new ItemStack(Material.STONE));
-            FieldUtil.setFieldValue(FieldUtil.getDeclaredField(NMSUtil.clazz_NMSItemStack,FieldFilter.t(tMethods.first().getReturnType()))
-                    .oneGet(),tNMSItem,(Object)null);
-            for(int i=tMethods.size();i>=0;i--){
+            Field tField=FieldUtil.getDeclaredField(NMSUtil.clazz_NMSItemStack,FieldFilter.t(tMethods.first().getReturnType())).oneGet();
+            for(int i=tMethods.size()-1;i>=0;i--){
+                FieldUtil.setFieldValue(tField,tNMSItem,(Object)null);
                 if(MethodUtil.invokeMethod(tMethods.get(i),tNMSItem)==null){
                     tPos=i;
                     break;
@@ -684,6 +685,8 @@ public class NBTUtil{
         return (int[])FieldUtil.getFieldValue(NBTUtil.field_NBTTagIntArray_value,pNBTTagIntArray);
     }
 
+    private static boolean EMPTY_NBTSTRING=ToolKit.compareVersion(NMSUtil.getMinecraftVersion(),"1.13")>=0;
+
     /**
      * 混合两个NBTTagCompound,并将混合结果放置打新的NBTTagCompound中
      * <p>
@@ -731,7 +734,14 @@ public class NBTUtil{
                         continue;
                     }
                 }
-                Object tStoreTarget=pRelaceDes&&!tSrcEle.toString().equals("\"minecraft:empty\"")?tSrcEle:tDesEle;
+                Object tStoreTarget=null;
+                if(NBTUtil.isNBTTagString(tSrcEle)&&tSrcEle.toString().equals("\"minecraft:empty\"")){
+                    tStoreTarget=tSrcEle;
+                }else if(NBTUtil.isNBTTagString(tDesEle)&&tDesEle.toString().equals("\"minecraft:empty\"")){
+                    tStoreTarget=tDesEle;
+                }else{
+                    tStoreTarget=pRelaceDes?tSrcEle:tDesEle;
+                }
                 tMixMapValue.put(sKey,NBTUtil.invokeNBTTagCopy(tStoreTarget));
             }
         }
