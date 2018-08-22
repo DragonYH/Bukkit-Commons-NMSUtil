@@ -736,9 +736,9 @@ public class NBTUtil{
                 }
                 Object tStoreTarget=null;
                 if(NBTUtil.isNBTTagString(tSrcEle)&&tSrcEle.toString().equals("\"minecraft:empty\"")){
-                    tStoreTarget=tSrcEle;
-                }else if(NBTUtil.isNBTTagString(tDesEle)&&tDesEle.toString().equals("\"minecraft:empty\"")){
                     tStoreTarget=tDesEle;
+                }else if(NBTUtil.isNBTTagString(tDesEle)&&tDesEle.toString().equals("\"minecraft:empty\"")){
+                    tStoreTarget=tSrcEle;
                 }else{
                     tStoreTarget=pRelaceDes?tSrcEle:tDesEle;
                 }
