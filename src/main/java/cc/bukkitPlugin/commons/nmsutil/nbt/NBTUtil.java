@@ -98,7 +98,7 @@ public class NBTUtil{
                 FieldUtil.setFieldValue(tFields.get(i),tNMSItem,tTag);
 
                 for(int j=tMethods.size()-1;j>=0;j--){
-                    if(MethodUtil.invokeMethod(tMethods.get(i),tNMSItem)==tTag){
+                    if(MethodUtil.invokeMethod(tMethods.get(j),tNMSItem)==tTag){
                         tPos=j;
                         tNMSItem_Tag=tFields.get(i);
                         i=-1;
