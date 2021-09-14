@@ -1,6 +1,5 @@
 package cc.bukkitPlugin.commons.nmsutil;
 
-import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -81,7 +80,6 @@ public class NMSUtil {
     static {
         // NMS ItemStck
         clazz_CraftItemStack = NMSUtil.getCBTClass("inventory.CraftItemStack");
-        Lookup tLookup = ClassUtil.newLookup(clazz_CraftItemStack);
         method_CraftItemStack_asNMSCopy = MethodUtil.getDeclaredMethod(clazz_CraftItemStack, "asNMSCopy", ItemStack.class);
 
         clazz_NMSItemStack = method_CraftItemStack_asNMSCopy.getReturnType();
