@@ -193,7 +193,7 @@ public class NMSUtil {
      */
     public static Object asNMSItemCopy(ItemStack pItem) {
         try {
-            return pItem == null ? null : MethodUtil.invokeMethod(method_CraftItemStack_asNMSCopy, pItem);
+            return pItem == null ? null : MethodUtil.invokeStaticMethod(method_CraftItemStack_asNMSCopy, pItem);
         } catch (Throwable e) {
             throw new IllegalStateException(e);
         }
@@ -212,7 +212,7 @@ public class NMSUtil {
 
         Object tItem;
         try {
-            tItem = MethodUtil.invokeMethod(method_CraftItemStack_asCraftMirror, pNMSItem);
+            tItem = MethodUtil.invokeStaticMethod(method_CraftItemStack_asCraftMirror, pNMSItem);
         } catch (Throwable e) {
             throw new IllegalStateException(e);
         }
