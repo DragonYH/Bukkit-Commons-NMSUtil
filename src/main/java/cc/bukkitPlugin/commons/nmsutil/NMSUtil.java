@@ -1,6 +1,5 @@
 package cc.bukkitPlugin.commons.nmsutil;
 
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -22,7 +21,6 @@ import cc.bukkitPlugin.commons.nmsutil.nbt.NBTUtil;
 import cc.commons.util.ToolKit;
 import cc.commons.util.reflect.ClassUtil;
 import cc.commons.util.reflect.FieldUtil;
-import cc.commons.util.reflect.LookupUtil;
 import cc.commons.util.reflect.MethodUtil;
 import cc.commons.util.reflect.filter.FieldFilter;
 import cc.commons.util.reflect.filter.MethodFilter;
@@ -33,24 +31,24 @@ import cc.commons.util.tools.CacheGettor;
  * 
  * @author 聪聪
  */
-public class NMSUtil{
+public class NMSUtil {
 
-    public static String mTestAPIVersion="v1_7_R4";
+    public static String mTestAPIVersion = "v1_7_R4";
     /** BukkitAPI版本 */
-    private static CacheGettor<String> mAPIVersion=CacheGettor.create(()->{
-        if(Bukkit.getServer()!=null){
-            String className=Bukkit.getServer().getClass().getPackage().getName();
-            return className.substring(className.lastIndexOf('.')+1);
-        }else return mTestAPIVersion;
+    private static CacheGettor<String> mAPIVersion = CacheGettor.create(() -> {
+        if (Bukkit.getServer() != null) {
+            String className = Bukkit.getServer().getClass().getPackage().getName();
+            return className.substring(className.lastIndexOf('.') + 1);
+        } else return mTestAPIVersion;
     });
-    public static String mTestMCVersion="1.7.10";
+    public static String mTestMCVersion = "1.7.10";
     /** Minecraft版本 */
-    private static CacheGettor<String> mMCVersion=CacheGettor.create(()->{
-        if(Bukkit.getServer()!=null){
-            String tVersionStr=Bukkit.getVersion();
+    private static CacheGettor<String> mMCVersion = CacheGettor.create(() -> {
+        if (Bukkit.getServer() != null) {
+            String tVersionStr = Bukkit.getVersion();
             //(MC: " + this.console.getVersion() + ")"
-            Matcher matcher=Pattern.compile("^.*?\\(MC: (.*?)\\)$").matcher(tVersionStr);
-            if(matcher.find())
+            Matcher matcher = Pattern.compile("^.*?\\(MC: (.*?)\\)$").matcher(tVersionStr);
+            if (matcher.find())
                 return matcher.group(1);
         }
         return mTestMCVersion;
@@ -66,15 +64,10 @@ public class NMSUtil{
     public static final Class<?> clazz_IInventory;
 
     public static final Method method_CraftItemStack_asNMSCopy;
-    public static final MethodHandle MH_CraftItemStack_asNMSCopy;
     public static final Method method_CraftItemStack_asCraftMirror;
-    public static final MethodHandle MH_CraftItemStack_asCraftMirror;
     public static final Method method_CraftPlayer_getHandle;
-    public static final MethodHandle MH_CraftPlayer_getHandle;
     public static final Method method_CraftEntity_getHandle;
-    public static final MethodHandle MH_CraftEntity_getHandle;
     public static final Method method_CraftWorld_getHandle;
-    public static final MethodHandle MH_CraftWorld_getHandle;
 
     /**
      * CraftBukkit类
@@ -85,46 +78,41 @@ public class NMSUtil{
 
     public static final Field field_CraftItemStack_handle;
 
-    static{
+    static {
         // NMS ItemStck
-        clazz_CraftItemStack=NMSUtil.getCBTClass("inventory.CraftItemStack");
-        Lookup tLookup=ClassUtil.newLookup(clazz_CraftItemStack);
-        method_CraftItemStack_asNMSCopy=MethodUtil.getDeclaredMethod(clazz_CraftItemStack,"asNMSCopy",ItemStack.class);
-        MH_CraftItemStack_asNMSCopy=LookupUtil.unreflect(tLookup,method_CraftItemStack_asNMSCopy);
+        clazz_CraftItemStack = NMSUtil.getCBTClass("inventory.CraftItemStack");
+        Lookup tLookup = ClassUtil.newLookup(clazz_CraftItemStack);
+        method_CraftItemStack_asNMSCopy = MethodUtil.getDeclaredMethod(clazz_CraftItemStack, "asNMSCopy", ItemStack.class);
 
-        clazz_NMSItemStack=method_CraftItemStack_asNMSCopy.getReturnType();
-        method_CraftItemStack_asCraftMirror=MethodUtil.getMethod(clazz_CraftItemStack,"asCraftMirror",clazz_NMSItemStack);
-        MH_CraftItemStack_asCraftMirror=LookupUtil.unreflect(tLookup,method_CraftItemStack_asCraftMirror);
-        field_CraftItemStack_handle=FieldUtil.getDeclaredField(clazz_CraftItemStack,FieldFilter.pt(clazz_NMSItemStack)).oneGet();
+        clazz_NMSItemStack = method_CraftItemStack_asNMSCopy.getReturnType();
+        method_CraftItemStack_asCraftMirror = MethodUtil.getMethod(clazz_CraftItemStack, "asCraftMirror", clazz_NMSItemStack);
+        field_CraftItemStack_handle = FieldUtil.getDeclaredField(clazz_CraftItemStack, FieldFilter.pt(clazz_NMSItemStack)).oneGet();
 
-        clazz_CraftInventory=NMSUtil.getCBTClass("inventory.CraftInventory");
-        Method method_CraftInventory_getInventory=MethodUtil.getMethod(clazz_CraftInventory,"getInventory",true);
-        clazz_IInventory=method_CraftInventory_getInventory.getReturnType();
+        clazz_CraftInventory = NMSUtil.getCBTClass("inventory.CraftInventory");
+        Method method_CraftInventory_getInventory = MethodUtil.getMethod(clazz_CraftInventory, "getInventory", true);
+        clazz_IInventory = method_CraftInventory_getInventory.getReturnType();
 
-        Class<?> tEntityClazz=NMSUtil.getCBTClass("entity.CraftEntity");
-        method_CraftEntity_getHandle=MethodUtil.getDeclaredMethod(tEntityClazz,"getHandle");
-        MH_CraftEntity_getHandle=LookupUtil.unreflect(method_CraftEntity_getHandle);
-        clazz_NMSEntity=method_CraftEntity_getHandle.getReturnType();
+        Class<?> tEntityClazz = NMSUtil.getCBTClass("entity.CraftEntity");
+        method_CraftEntity_getHandle = MethodUtil.getDeclaredMethod(tEntityClazz, "getHandle");
+        clazz_NMSEntity = method_CraftEntity_getHandle.getReturnType();
 
-        clazz_CraftPlayer=NMSUtil.getCBTClass("entity.CraftPlayer");
-        method_CraftPlayer_getHandle=MethodUtil.getDeclaredMethod(clazz_CraftPlayer,MethodFilter.pn("getHandle")).oneGet();
-        MH_CraftPlayer_getHandle=LookupUtil.unreflect(method_CraftPlayer_getHandle);
-        clazz_EntityPlayerMP=method_CraftPlayer_getHandle.getReturnType();
-        clazz_EntityPlayer=clazz_EntityPlayerMP.getSuperclass();
+        clazz_CraftPlayer = NMSUtil.getCBTClass("entity.CraftPlayer");
+        method_CraftPlayer_getHandle = MethodUtil.getDeclaredMethod(clazz_CraftPlayer, MethodFilter.pn("getHandle")).oneGet();
+        clazz_EntityPlayerMP = method_CraftPlayer_getHandle.getReturnType();
+        clazz_EntityPlayer = clazz_EntityPlayerMP.getSuperclass();
 
-        Class<?> tClazz=NMSUtil.getCBTClass("CraftWorld");
-        method_CraftWorld_getHandle=MethodUtil.getDeclaredMethod(tClazz,"getHandle");
-        MH_CraftWorld_getHandle=LookupUtil.unreflect(method_CraftWorld_getHandle);
+        Class<?> tClazz = NMSUtil.getCBTClass("CraftWorld");
+        method_CraftWorld_getHandle = MethodUtil.getDeclaredMethod(tClazz, "getHandle");
     }
 
     /**
      * 获取服务的BukkitAPI版本
      */
-    public static String getBukkitAPIVersion(){
+    public static String getBukkitAPIVersion() {
         return NMSUtil.mAPIVersion.get();
     }
-    
-    public static String getMinecraftVersion(){
+
+    public static String getMinecraftVersion() {
         return NMSUtil.mMCVersion.get();
     }
 
@@ -135,8 +123,8 @@ public class NMSUtil{
      *            短名字
      * @return 完整名字
      */
-    public static String getCBTName(String pName){
-        return "org.bukkit.craftbukkit."+NMSUtil.getBukkitAPIVersion()+"."+pName;
+    public static String getCBTName(String pName) {
+        return "org.bukkit.craftbukkit." + NMSUtil.getBukkitAPIVersion() + "." + pName;
     }
 
     /**
@@ -145,7 +133,7 @@ public class NMSUtil{
      * @param pClazz
      *            craftbukkit类短名字,(org.bukkit.craftbukkit.version后的名字)
      */
-    public static Class<?> getCBTClass(String pClazz){
+    public static Class<?> getCBTClass(String pClazz) {
         return ClassUtil.getClass(getCBTName(pClazz));
     }
 
@@ -156,8 +144,8 @@ public class NMSUtil{
      *            短名字
      * @return 完整名字
      */
-    public static String getNMSName(String pName){
-        return "net.minecraft.server."+NMSUtil.getBukkitAPIVersion()+"."+pName;
+    public static String getNMSName(String pName) {
+        return "net.minecraft.server." + NMSUtil.getBukkitAPIVersion() + "." + pName;
     }
 
     /**
@@ -166,7 +154,7 @@ public class NMSUtil{
      * @param pClazz
      *            NMS类短名字
      */
-    public static Class<?> getNMSClass(String pClazz){
+    public static Class<?> getNMSClass(String pClazz) {
         return ClassUtil.getClass(getNMSName(pClazz));
     }
 
@@ -177,12 +165,12 @@ public class NMSUtil{
      *            Bukkit物品实例
      * @return NMS ItemStack实例或者null
      */
-    public static Object getNMSItem(ItemStack pItem){
-        if(pItem==null||pItem.getType()==Material.AIR)
+    public static Object getNMSItem(ItemStack pItem) {
+        if (pItem == null || pItem.getType() == Material.AIR)
             return null;
-        Object tNMSItem=NMSUtil.getItemHandle(pItem);
-        if(tNMSItem==null){
-            tNMSItem=NMSUtil.asNMSItemCopy(pItem);
+        Object tNMSItem = NMSUtil.getItemHandle(pItem);
+        if (tNMSItem == null) {
+            tNMSItem = NMSUtil.asNMSItemCopy(pItem);
         }
         return tNMSItem;
     }
@@ -194,8 +182,8 @@ public class NMSUtil{
      *            Bukkit物品
      * @return NMS物品或null
      */
-    public static Object getItemHandle(ItemStack pItem){
-        return field_CraftItemStack_handle.getDeclaringClass().isInstance(pItem)?FieldUtil.getFieldValue(field_CraftItemStack_handle,pItem):null;
+    public static Object getItemHandle(ItemStack pItem) {
+        return field_CraftItemStack_handle.getDeclaringClass().isInstance(pItem) ? FieldUtil.getFieldValue(field_CraftItemStack_handle, pItem) : null;
     }
 
     /**
@@ -205,10 +193,10 @@ public class NMSUtil{
      *            Bukkit物品
      * @return NMS物品或null
      */
-    public static Object asNMSItemCopy(ItemStack pItem){
-        try{
-            return pItem==null?null:NMSUtil.MH_CraftItemStack_asNMSCopy.invoke(pItem);
-        }catch(Throwable e){
+    public static Object asNMSItemCopy(ItemStack pItem) {
+        try {
+            return pItem == null ? null : MethodUtil.invokeMethod(method_CraftItemStack_asNMSCopy, pItem);
+        } catch (Throwable e) {
             throw new IllegalStateException(e);
         }
     }
@@ -220,17 +208,17 @@ public class NMSUtil{
      *            NMS物品实例
      * @return Bukkit物品实例或者null
      */
-    public static ItemStack getCBTItem(Object pNMSItem){
-        if(!NMSUtil.clazz_NMSItemStack.isInstance(pNMSItem))
+    public static ItemStack getCBTItem(Object pNMSItem) {
+        if (!NMSUtil.clazz_NMSItemStack.isInstance(pNMSItem))
             return null;
 
         Object tItem;
-        try{
-            tItem=NMSUtil.MH_CraftItemStack_asCraftMirror.invoke(pNMSItem);
-        }catch(Throwable e){
+        try {
+            tItem = MethodUtil.invokeMethod(method_CraftItemStack_asCraftMirror, pNMSItem);
+        } catch (Throwable e) {
             throw new IllegalStateException(e);
         }
-        return ItemStack.class.isInstance(tItem)?(ItemStack)tItem:null;
+        return ItemStack.class.isInstance(tItem) ? (ItemStack)tItem : null;
 
     }
 
@@ -241,16 +229,16 @@ public class NMSUtil{
      *            bukkit物品
      * @return 转换失败则返回源物品
      */
-    public static ItemStack convertItemToNMSFormat(ItemStack pItem){
-        if(pItem==null)
+    public static ItemStack convertItemToNMSFormat(ItemStack pItem) {
+        if (pItem == null)
             return null;
 
-        ItemStack tItem=pItem.clone();
-        int tAmount=tItem.getAmount();
+        ItemStack tItem = pItem.clone();
+        int tAmount = tItem.getAmount();
         tItem.setAmount(1);
 
-        Object tNMSItem=NMSUtil.getNMSItem(tItem);
-        if(tNMSItem==null||(tItem=NMSUtil.getCBTItem(tNMSItem))==null)
+        Object tNMSItem = NMSUtil.getNMSItem(tItem);
+        if (tNMSItem == null || (tItem = NMSUtil.getCBTItem(tNMSItem)) == null)
             return pItem;
 
         tItem.setAmount(tAmount);
@@ -263,32 +251,32 @@ public class NMSUtil{
      * 由于Tellraw的Json中,部分值可能被修改,因此该Json不适合用作存储与序列化
      * </p>
      */
-    public static String getItemTellrawJson(ItemStack pItem){
-        if(pItem==null||pItem.getType()==Material.AIR)
+    public static String getItemTellrawJson(ItemStack pItem) {
+        if (pItem == null || pItem.getType() == Material.AIR)
             return "{}";
 
-        Map<String,Object> tContent=null;
-        Object tNMSItem=NMSUtil.getNMSItem(pItem);
-        Object tTag=null;
-        if(tNMSItem!=null&&(tTag=NBTUtil.saveItemToNBT_NMS(tNMSItem))!=null){
-            if(ToolKit.compareVersion(NMSUtil.mMCVersion.get(),"1.13")>=0){
+        Map<String, Object> tContent = null;
+        Object tNMSItem = NMSUtil.getNMSItem(pItem);
+        Object tTag = null;
+        if (tNMSItem != null && (tTag = NBTUtil.saveItemToNBT_NMS(tNMSItem)) != null) {
+            if (ToolKit.compareVersion(NMSUtil.mMCVersion.get(), "1.13") >= 0) {
                 return tTag.toString();
             }
-            tContent=NBTUtil.getNBTTagCompoundValue(tTag);
-            Object tItemNBT=tContent.remove(NBTKey.ItemTag);
-            if(NBTUtil.isNBTTagCompound(tItemNBT)){
-                tContent.put(NBTKey.ItemTag,NBTSerializer.serializeNBTToTellrawJson(tItemNBT));
+            tContent = NBTUtil.getNBTTagCompoundValue(tTag);
+            Object tItemNBT = tContent.remove(NBTKey.ItemTag);
+            if (NBTUtil.isNBTTagCompound(tItemNBT)) {
+                tContent.put(NBTKey.ItemTag, NBTSerializer.serializeNBTToTellrawJson(tItemNBT));
             }
-        }else{
-            tContent=new HashMap<>();
-            tContent.put(NBTKey.ItemId,pItem.getTypeId()+"s");
-            tContent.put(NBTKey.ItemDamage,pItem.getDurability()+"s");
-            tContent.put(NBTKey.ItemCount,pItem.getAmount()+"b");
+        } else {
+            tContent = new HashMap<>();
+            tContent.put(NBTKey.ItemId, pItem.getTypeId() + "s");
+            tContent.put(NBTKey.ItemDamage, pItem.getDurability() + "s");
+            tContent.put(NBTKey.ItemCount, pItem.getAmount() + "b");
         }
 
-        StringBuilder tItemJson=new StringBuilder("{");
-        for(Map.Entry<String,Object> sEntry : tContent.entrySet()){
-            if(tItemJson.length()!=1){
+        StringBuilder tItemJson = new StringBuilder("{");
+        for (Map.Entry<String, Object> sEntry : tContent.entrySet()) {
+            if (tItemJson.length() != 1) {
                 tItemJson.append(',');
             }
             tItemJson.append(sEntry.getKey()).append(':').append(sEntry.getValue().toString());
@@ -304,26 +292,26 @@ public class NMSUtil{
      *            Bukkit玩家
      * @return NMS玩家或null
      */
-    public static Object getNMSPlayer(Player pPlayer){
-        if(pPlayer!=null){
-            if(NMSUtil.clazz_CraftPlayer.isInstance(pPlayer)){
-                try{
-                    return NMSUtil.MH_CraftPlayer_getHandle.invoke(pPlayer);
-                }catch(Throwable e){
+    public static Object getNMSPlayer(Player pPlayer) {
+        if (pPlayer != null) {
+            if (NMSUtil.clazz_CraftPlayer.isInstance(pPlayer)) {
+                try {
+                    return MethodUtil.invokeMethod(method_CraftPlayer_getHandle, pPlayer);
+                } catch (Throwable e) {
                     throw new IllegalStateException(e);
                 }
-            }else{
+            } else {
                 return NMSUtil.getNMSEntity(pPlayer);
             }
         }
         return null;
     }
 
-    public static Object getNMSEntity(Entity pEntity){
-        if(pEntity!=null&&NMSUtil.method_CraftEntity_getHandle.getDeclaringClass().isInstance(pEntity)){
-            try{
-                return NMSUtil.MH_CraftEntity_getHandle.invoke(pEntity);
-            }catch(Throwable e){
+    public static Object getNMSEntity(Entity pEntity) {
+        if (pEntity != null && NMSUtil.method_CraftEntity_getHandle.getDeclaringClass().isInstance(pEntity)) {
+            try {
+                return MethodUtil.invokeMethod(method_CraftEntity_getHandle, pEntity);
+            } catch (Throwable e) {
                 throw new IllegalStateException(e);
             }
         }
@@ -337,11 +325,11 @@ public class NMSUtil{
      *            Bukkit的world实例
      * @return NMS的world实例,类型一般为WorldServer
      */
-    public static Object getNMSWorld(World pWorld){
-        if(pWorld!=null&&NMSUtil.method_CraftWorld_getHandle.getDeclaringClass().isInstance(pWorld)){
-            try{
-                return NMSUtil.MH_CraftWorld_getHandle.invoke(pWorld);
-            }catch(Throwable e){
+    public static Object getNMSWorld(World pWorld) {
+        if (pWorld != null && NMSUtil.method_CraftWorld_getHandle.getDeclaringClass().isInstance(pWorld)) {
+            try {
+                return MethodUtil.invokeMethod(method_CraftWorld_getHandle, pWorld);
+            } catch (Throwable e) {
                 throw new IllegalStateException(e);
             }
         }
