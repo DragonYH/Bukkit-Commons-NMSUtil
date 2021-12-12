@@ -149,7 +149,7 @@ public class NBTUtil {
 
         field_NBTTagByte_value = FieldUtil.getDeclaredField(clazz_NBTTagByte, FieldFilter.t(byte.class)).oneGet();
         field_NBTTagShort_value = FieldUtil.getDeclaredField(clazz_NBTTagShort, FieldFilter.t(short.class)).oneGet();
-        field_NBTTagInt_value = FieldUtil.getDeclaredField(clazz_NBTTagInt, FieldFilter.t(int.class)).oneGet();
+        field_NBTTagInt_value = FieldUtil.getDeclaredField(clazz_NBTTagInt, FieldFilter.t(int.class).addDeniedModifer(Modifier.STATIC)).oneGet();
         field_NBTTagFloat_value = FieldUtil.getDeclaredField(clazz_NBTTagFloat, FieldFilter.t(float.class)).oneGet();
         field_NBTTagDouble_value = FieldUtil.getDeclaredField(clazz_NBTTagDouble, FieldFilter.t(double.class)).oneGet();
         field_NBTTagLong_value = FieldUtil.getDeclaredField(clazz_NBTTagLong, FieldFilter.t(long.class)).oneGet();
